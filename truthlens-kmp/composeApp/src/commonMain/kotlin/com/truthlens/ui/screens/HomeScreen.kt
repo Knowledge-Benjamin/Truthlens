@@ -1,15 +1,18 @@
 package com.truthlens.ui.screens
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,22 +20,60 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
+import com.truthlens.ui.chat.TendrilsMessageBubble
+import com.truthlens.ui.chat.ThinkingIndicator
+import com.truthlens.ui.components.CompanionAvatar
 import com.truthlens.ui.components.TendrilsCard
+import com.truthlens.ui.model.ChatMessage
+import com.truthlens.ui.model.CompanionState
+import com.truthlens.ui.navigation.ProfileTab
 import com.truthlens.ui.theme.PillShape
 import com.truthlens.ui.theme.TendrilsPalette
 import com.truthlens.ui.theme.TendrilsTheme
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
- * HomeScreen — Personal AI Companion Central Hub
- * Designed with organic, calm visual elements, distinct companion state,
- * contextual suggestions, and comfortable floating input area.
+ * HomeScreen — Personal AI Companion
+ * Milestone 2 Implementation:
+ * - Top greeting & profile access
+ * - Central CompanionAvatar with 8 distinct assistant states
+ * - Contextual suggestions
+ * - Interactive conversation stream with rich responses
+ * - Floating input bar with mic and attachment actions
  */
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun HomeScreen() {
+    val tabNavigator = LocalTabNavigator.current
+    val coroutineScope = rememberCoroutineScope()
+    val listState = rememberLazyListState()
+
+    var companionState by remember { mutableStateOf(CompanionState.IDLE) }
     var inputText by remember { mutableStateOf("") }
+    var showAttachmentSheet by remember { mutableStateOf(false) }
+
+    // Conversation state
+    var messages by remember {
+        mutableStateOf(
+            listOf(
+                ChatMessage(
+                    id = "msg_init",
+                    role = ChatMessage.Role.ASSISTANT,
+                    content = "# Hello, Explorer!\nI am Tendrils, your personal companion. What would you like to explore or learn today?\n- Ask me to explain any complex subject\n- Test suspicious links or messages\n- Brainstorm creative stories and study plans",
+                    followUps = listOf(
+                        "Explain photosynthesis simply",
+                        "How do I spot a fake online link?",
+                        "Help me create a revision schedule"
+                    )
+                )
+            )
+        )
+    }
+
     val suggestions = listOf(
         "Explain something",
         "Help me learn",
@@ -40,6 +81,44 @@ fun HomeScreen() {
         "Read a document",
         "Ask anything"
     )
+
+    // Function to handle sending a query
+    val onSendMessage: (String) -> Unit = { query ->
+        if (query.isNotBlank() && companionState != CompanionState.THINKING) {
+            val userMsg = ChatMessage(
+                id = "u_${messages.size}",
+                role = ChatMessage.Role.USER,
+                content = query
+            )
+            messages = messages + userMsg
+            inputText = ""
+
+            // Trigger Assistant State Sequence: Thinking -> Speaking -> Completed -> Idle
+            coroutineScope.launch {
+                listState.animateScrollToItem(messages.size - 1)
+                companionState = CompanionState.THINKING
+                delay(1200)
+
+                companionState = CompanionState.SPEAKING
+                val responseContent = generateCompanionResponse(query)
+                val followUps = generateFollowUps(query)
+
+                val assistantMsg = ChatMessage(
+                    id = "a_${messages.size}",
+                    role = ChatMessage.Role.ASSISTANT,
+                    content = responseContent,
+                    followUps = followUps
+                )
+                messages = messages + assistantMsg
+                listState.animateScrollToItem(messages.size - 1)
+
+                delay(600)
+                companionState = CompanionState.COMPLETED
+                delay(1000)
+                companionState = CompanionState.IDLE
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -51,13 +130,13 @@ fun HomeScreen() {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+                .padding(horizontal = 20.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
                 Text(
-                    text = "Good morning,",
+                    text = "Welcome back,",
                     style = TendrilsTheme.typography.caption,
                     color = TendrilsTheme.colors.textMuted
                 )
@@ -72,30 +151,30 @@ fun HomeScreen() {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // Activity / Notification Indicator
+                // Quick State Indicator Pill
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(TendrilsTheme.colors.surface)
-                        .border(1.dp, TendrilsTheme.colors.border, CircleShape),
-                    contentAlignment = Alignment.Center
+                        .clip(PillShape)
+                        .background(companionState.auraColor)
+                        .border(1.dp, companionState.primaryColor.copy(alpha = 0.4f), PillShape)
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Notifications,
-                        contentDescription = "Notifications",
-                        tint = TendrilsTheme.colors.textSecondary,
-                        modifier = Modifier.size(18.dp)
+                    Text(
+                        text = companionState.label,
+                        style = TendrilsTheme.typography.caption,
+                        fontWeight = FontWeight.Bold,
+                        color = companionState.primaryColor
                     )
                 }
 
-                // Avatar
+                // Avatar / Profile Access Button
                 Box(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
                         .background(TendrilsTheme.colors.primary.copy(alpha = 0.2f))
-                        .border(1.dp, TendrilsTheme.colors.primary, CircleShape),
+                        .border(1.5.dp, TendrilsTheme.colors.primary, CircleShape)
+                        .clickable { tabNavigator.current = ProfileTab },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -108,130 +187,73 @@ fun HomeScreen() {
             }
         }
 
-        // --- MAIN SCROLLABLE CONTENT ---
-        Column(
+        // --- MAIN SCROLLABLE CONTENT (Avatar + Chat Thread) ---
+        LazyColumn(
+            state = listState,
             modifier = Modifier
                 .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // --- CENTRE: COMPANION VISUAL & STATE INDICATOR ---
-            Box(
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (TendrilsTheme.colors.isDark) {
-                            TendrilsPalette.Sprout500.copy(alpha = 0.12f)
-                        } else {
-                            TendrilsPalette.Sprout500.copy(alpha = 0.08f)
-                        }
-                    )
-                    .border(2.dp, TendrilsTheme.colors.primary.copy(alpha = 0.4f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                // Organic botanical icon representing Tendrils
-                Icon(
-                    imageVector = Icons.Default.Favorite,
-                    contentDescription = "Tendrils Companion",
-                    tint = TendrilsTheme.colors.primary,
-                    modifier = Modifier.size(48.dp)
+            // Central Companion Avatar
+            item {
+                Spacer(modifier = Modifier.height(10.dp))
+                CompanionAvatar(
+                    state = companionState,
+                    onStateSelected = { companionState = it }
                 )
+                Spacer(modifier = Modifier.height(16.dp))
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // State Badge (Idle, ready)
-            Box(
-                modifier = Modifier
-                    .clip(PillShape)
-                    .background(TendrilsTheme.colors.surface)
-                    .border(1.dp, TendrilsTheme.colors.border, PillShape)
-                    .padding(horizontal = 14.dp, vertical = 6.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+            // Suggestions Carousel
+            item {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(TendrilsPalette.Emerald400)
-                    )
-                    Text(
-                        text = "Tendrils Companion • Idle",
-                        style = TendrilsTheme.typography.caption,
-                        color = TendrilsTheme.colors.textSecondary
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "What would you like to explore together?",
-                style = TendrilsTheme.typography.h3,
-                color = TendrilsTheme.colors.textPrimary,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // --- SUGGESTIONS CAROUSEL ---
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                items(suggestions) { suggestion ->
-                    TendrilsCard(
-                        shape = PillShape,
-                        padding = 10.dp,
-                        backgroundColor = TendrilsTheme.colors.surfaceElevated,
-                        borderColor = TendrilsTheme.colors.border,
-                        onClick = { inputText = suggestion }
-                    ) {
-                        Text(
-                            text = suggestion,
-                            style = TendrilsTheme.typography.body2,
-                            color = TendrilsTheme.colors.textPrimary,
-                            modifier = Modifier.padding(horizontal = 4.dp)
-                        )
+                    items(suggestions) { suggestion ->
+                        TendrilsCard(
+                            shape = PillShape,
+                            padding = 8.dp,
+                            backgroundColor = TendrilsTheme.colors.surfaceElevated,
+                            borderColor = TendrilsTheme.colors.border,
+                            onClick = { onSendMessage(suggestion) }
+                        ) {
+                            Text(
+                                text = suggestion,
+                                style = TendrilsTheme.typography.caption,
+                                color = TendrilsTheme.colors.textPrimary,
+                                modifier = Modifier.padding(horizontal = 6.dp)
+                            )
+                        }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            // Messages
+            items(messages) { msg ->
+                TendrilsMessageBubble(
+                    message = msg,
+                    onFollowUpClick = { followUp -> onSendMessage(followUp) }
+                )
+            }
 
-            // --- WELCOME CARD ---
-            TendrilsCard(
-                modifier = Modifier.fillMaxWidth(),
-                backgroundColor = TendrilsTheme.colors.surface,
-                padding = 18.dp
-            ) {
-                Column {
-                    Text(
-                        text = "About your companion",
-                        style = TendrilsTheme.typography.subtitle1,
-                        fontWeight = FontWeight.SemiBold,
-                        color = TendrilsTheme.colors.textPrimary
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = "Tendrils is your safe, friendly space for curious minds. Ask questions, study new subjects, check suspicious links, and explore the digital world with confidence.",
-                        style = TendrilsTheme.typography.body2,
-                        color = TendrilsTheme.colors.textSecondary
-                    )
+            // Thinking State Indicator
+            if (companionState == CompanionState.THINKING) {
+                item {
+                    ThinkingIndicator()
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            // Spacer for comfortable scrolling
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
 
-        // --- FLOATING INPUT AREA ---
+        // --- FLOATING INPUT BAR ---
         TendrilsCard(
             modifier = Modifier
                 .fillMaxWidth()
@@ -247,7 +269,7 @@ fun HomeScreen() {
             ) {
                 // Attachment Button
                 IconButton(
-                    onClick = { /* Flow D / E */ },
+                    onClick = { showAttachmentSheet = true },
                     modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
@@ -281,15 +303,29 @@ fun HomeScreen() {
                     singleLine = true
                 )
 
-                // Voice / Mic Button
+                // Voice / Mic Demonstration Button
                 IconButton(
-                    onClick = { /* Flow B voice demo */ },
+                    onClick = {
+                        // Toggle Listening state demo
+                        if (companionState == CompanionState.LISTENING) {
+                            companionState = CompanionState.IDLE
+                        } else {
+                            companionState = CompanionState.LISTENING
+                            coroutineScope.launch {
+                                delay(2500)
+                                if (companionState == CompanionState.LISTENING) {
+                                    inputText = "Can you explain how search engines work?"
+                                    companionState = CompanionState.IDLE
+                                }
+                            }
+                        }
+                    },
                     modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Share, // voice representation placeholder
+                        imageVector = Icons.Default.Share,
                         contentDescription = "Voice mode",
-                        tint = TendrilsTheme.colors.textMuted
+                        tint = if (companionState == CompanionState.LISTENING) TendrilsPalette.Indigo400 else TendrilsTheme.colors.textMuted
                     )
                 }
 
@@ -304,15 +340,11 @@ fun HomeScreen() {
                     contentAlignment = Alignment.Center
                 ) {
                     IconButton(
-                        onClick = {
-                            if (inputText.isNotBlank()) {
-                                inputText = ""
-                            }
-                        },
-                        enabled = inputText.isNotBlank()
+                        onClick = { onSendMessage(inputText) },
+                        enabled = inputText.isNotBlank() && companionState != CompanionState.THINKING
                     ) {
                         Icon(
-                            imageVector = Icons.Default.ArrowForward,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = "Send",
                             tint = if (inputText.isNotBlank()) Color.White else TendrilsTheme.colors.textMuted,
                             modifier = Modifier.size(18.dp)
@@ -321,5 +353,141 @@ fun HomeScreen() {
                 }
             }
         }
+    }
+
+    // Attachment Modal Dialog
+    if (showAttachmentSheet) {
+        AlertDialog(
+            onDismissRequest = { showAttachmentSheet = false },
+            title = {
+                Text(
+                    text = "Add to Conversation",
+                    style = TendrilsTheme.typography.h3,
+                    color = TendrilsTheme.colors.textPrimary
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Choose an item for Tendrils to understand or inspect:",
+                        style = TendrilsTheme.typography.body2,
+                        color = TendrilsTheme.colors.textSecondary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    AttachmentOption("Image or Photograph", "Flow D • Image understanding preview", Icons.Default.Search) {
+                        showAttachmentSheet = false
+                        onSendMessage("I've shared an image. Can you analyze what's happening?")
+                    }
+                    AttachmentOption("Document or Article", "Flow E • Summarise text & key insights", Icons.Default.Info) {
+                        showAttachmentSheet = false
+                        onSendMessage("Can you read this document and give me the summary?")
+                    }
+                    AttachmentOption("Web Link or Message", "Flow F • Digital safety check", Icons.Default.Check) {
+                        showAttachmentSheet = false
+                        onSendMessage("Please check this link: https://safety-sample.org")
+                    }
+                }
+            },
+            buttons = {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = { showAttachmentSheet = false }) {
+                        Text("Close", color = TendrilsTheme.colors.textMuted)
+                    }
+                }
+            },
+            backgroundColor = TendrilsTheme.colors.surface,
+            shape = TendrilsTheme.shapes.medium
+        )
+    }
+}
+
+@Composable
+private fun AttachmentOption(
+    title: String,
+    subtitle: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit
+) {
+    TendrilsCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = TendrilsTheme.colors.surfaceElevated,
+        padding = 10.dp,
+        onClick = onClick
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(imageVector = icon, contentDescription = null, tint = TendrilsTheme.colors.primary, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(10.dp))
+            Column {
+                Text(text = title, style = TendrilsTheme.typography.body2, fontWeight = FontWeight.SemiBold, color = TendrilsTheme.colors.textPrimary)
+                Text(text = subtitle, style = TendrilsTheme.typography.caption, color = TendrilsTheme.colors.textMuted)
+            }
+        }
+    }
+}
+
+// Realistic contextual assistant responses with markdown headers, lists, and advice
+private fun generateCompanionResponse(query: String): String {
+    val q = query.lowercase()
+    return when {
+        q.contains("photosynthesis") -> """
+# Photosynthesis Explained
+Photosynthesis is how plants turn natural sunlight into living energy!
+
+## Key Steps:
+- **Sunlight Capture:** Leaves absorb green light wavelengths through chlorophyll.
+- **Water Absorption:** Roots draw moisture up from the soil.
+- **Clean Energy Output:** The plant releases fresh oxygen for us to breathe and stores glucose as fuel.
+
+Would you like to explore plant cells or look at an illustrated diagram next?
+        """.trimIndent()
+
+        q.contains("link") || q.contains("fake") -> """
+# Digital Safety Guide: Spotting Suspicious Links
+Before opening an unknown message or link, check these core indicators:
+
+## Warning Signs to Watch:
+- **Misspelled Domains:** Watch out for `rn` instead of `m` or extra subdomains.
+- **Urgent Emotional Tone:** Scams often claim an account will be deleted within 10 minutes.
+- **Missing SSL/Provenance:** Legitimate services use verified certificates and consistent branding.
+
+Tip: When unsure, never enter personal credentials. Ask Tendrils to inspect the link preview first!
+        """.trimIndent()
+
+        q.contains("study") || q.contains("schedule") -> """
+# Smart Study Routine
+Here is a calm, sustainable study flow for your goals:
+
+- **25 Min Deep Focus:** Silence distractions and tackle the hardest concept first.
+- **5 Min Organic Break:** Stretch, drink water, and rest your eyes away from screens.
+- **Active Recall:** Write down 3 things you remember before opening notes again.
+
+What subject are we focusing on today?
+        """.trimIndent()
+
+        else -> """
+# Great question!
+Here is a helpful breakdown on **$query**:
+
+- **Core Idea:** Understanding this starts with recognizing the foundational principles and how they connect.
+- **Practical Application:** In daily life, this helps solve problems faster and with more clarity.
+- **Next Discovery:** Exploring how this relates to broader subjects like technology and digital literacy.
+
+Feel free to ask a follow-up or choose a suggested topic below!
+        """.trimIndent()
+    }
+}
+
+private fun generateFollowUps(query: String): List<String> {
+    val q = query.lowercase()
+    return when {
+        q.contains("photosynthesis") -> listOf("Why are leaves green?", "How do plant cells differ from animal cells?")
+        q.contains("link") || q.contains("fake") -> listOf("How does HTTPS work?", "What should I do if I clicked a scam link?")
+        q.contains("study") -> listOf("Give me a 1-hour study planner", "How can I prepare for an exam without stress?")
+        else -> listOf("Explain this in simpler terms", "Give me a real-world example", "What are the common mistakes to avoid?")
     }
 }

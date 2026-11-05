@@ -179,6 +179,14 @@ fun ProfileScreen() {
                     SettingsRowItem("Permissions", "Camera, Mic, Notifications", Icons.Default.Star)
                     Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
                     SettingsRowItem("Family Settings", "Optional pairing for kids & teens", Icons.Default.Person)
+                    Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
+                    val onboardingController = com.truthlens.ui.model.LocalOnboardingController.current
+                    SettingsRowItem(
+                        title = "Replay Onboarding",
+                        subtitle = "Test 5-step welcome and setup experience",
+                        icon = Icons.Default.Refresh,
+                        onClick = { onboardingController.value = false }
+                    )
                 }
             }
 
@@ -198,7 +206,7 @@ fun ProfileScreen() {
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Version 1.0.0-alpha • Milestone 1 (UI Foundation)",
+                        text = "Version 1.0.0-alpha • Milestone 2 (Core Experience & States)",
                         style = TendrilsTheme.typography.caption,
                         color = TendrilsTheme.colors.textMuted
                     )
@@ -243,12 +251,13 @@ private fun ThemeOptionChip(
 private fun SettingsRowItem(
     title: String,
     subtitle: String,
-    icon: ImageVector
+    icon: ImageVector,
+    onClick: (() -> Unit)? = null
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { /* Milestone 4 detailed navigation */ }
+            .clickable { onClick?.invoke() }
             .padding(horizontal = 12.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

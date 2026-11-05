@@ -1,5 +1,6 @@
 package com.truthlens.ui
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -12,34 +13,48 @@ import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.navigator.tab.CurrentTab
 import cafe.adriel.voyager.navigator.tab.TabNavigator
 import com.truthlens.ui.components.TendrilsBottomNav
+import com.truthlens.ui.model.LocalOnboardingController
 import com.truthlens.ui.navigation.HomeTab
+import com.truthlens.ui.screens.onboarding.OnboardingScreen
 import com.truthlens.ui.theme.LocalThemeMode
 import com.truthlens.ui.theme.TendrilsTheme
 import com.truthlens.ui.theme.ThemeMode
 
 /**
  * Tendrils Application Shell
- * Root container hosting the adaptive theme and persistent 4-tab bottom navigation.
+ * Root container hosting adaptive theme, onboarding routing, and persistent 4-tab bottom navigation.
  */
 @Composable
 fun App() {
     val themeModeState = remember { mutableStateOf(ThemeMode.SYSTEM) }
+    val onboardingCompletedState = remember { mutableStateOf(false) }
 
-    CompositionLocalProvider(LocalThemeMode provides themeModeState) {
+    CompositionLocalProvider(
+        LocalThemeMode provides themeModeState,
+        LocalOnboardingController provides onboardingCompletedState
+    ) {
         TendrilsTheme(themeMode = themeModeState.value) {
-            TabNavigator(HomeTab) {
-                Scaffold(
-                    backgroundColor = TendrilsTheme.colors.background,
-                    bottomBar = {
-                        TendrilsBottomNav()
-                    }
-                ) { innerPadding ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
-                    ) {
-                        CurrentTab()
+            Crossfade(targetState = onboardingCompletedState.value) { isCompleted ->
+                if (!isCompleted) {
+                    OnboardingScreen(onComplete = {
+                        onboardingCompletedState.value = true
+                    })
+                } else {
+                    TabNavigator(HomeTab) {
+                        Scaffold(
+                            backgroundColor = TendrilsTheme.colors.background,
+                            bottomBar = {
+                                TendrilsBottomNav()
+                            }
+                        ) { innerPadding ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(innerPadding)
+                            ) {
+                                CurrentTab()
+                            }
+                        }
                     }
                 }
             }
