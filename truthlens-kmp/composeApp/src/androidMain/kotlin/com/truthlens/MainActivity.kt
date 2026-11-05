@@ -8,6 +8,7 @@ import com.truthlens.ui.App
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.truthlens.voice.TendrilsTts.init(this)
         setContent {
             App()
         }

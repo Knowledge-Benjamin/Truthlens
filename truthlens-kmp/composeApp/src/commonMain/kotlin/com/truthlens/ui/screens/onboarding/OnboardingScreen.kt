@@ -24,6 +24,8 @@ import androidx.compose.ui.unit.sp
 import com.truthlens.ui.components.TendrilsCard
 import com.truthlens.ui.model.ExperienceMode
 import com.truthlens.ui.model.InteractionMode
+import com.truthlens.ui.model.UgandanLanguageDirectory
+import com.truthlens.ui.model.UgandanLanguage
 import com.truthlens.ui.theme.*
 
 /**
@@ -341,7 +343,20 @@ private fun PersonalisationStep(
     onThemeChange: (ThemeMode) -> Unit,
     onNext: () -> Unit
 ) {
-    val languages = listOf("English", "Kiswahili", "French", "Spanish")
+    var selectedRegion by remember { mutableStateOf("All") }
+    val regions = listOf("All", "Central", "Eastern", "Northern", "Western", "National")
+
+    val displayedLanguages = remember(selectedRegion) {
+        if (selectedRegion == "All") {
+            UgandanLanguageDirectory.languages
+        } else {
+            UgandanLanguageDirectory.languages.filter { it.region.contains(selectedRegion, ignoreCase = true) }
+        }
+    }
+
+    val activeUgLang = UgandanLanguageDirectory.languages.find { it.name.equals(language, ignoreCase = true) }
+        ?: UgandanLanguageDirectory.languages.first()
+
     val allInterests = listOf(
         "Science & Nature", "Homework & Study", "Creative Writing",
         "Digital Safety", "Coding & Logic", "General Curiosity", "History"
@@ -358,7 +373,7 @@ private fun PersonalisationStep(
             color = TendrilsTheme.colors.textPrimary
         )
         Text(
-            text = "Tailor how Tendrils communicates and looks.",
+            text = "Tailor how Tendrils communicates across Uganda.",
             style = TendrilsTheme.typography.body2,
             color = TendrilsTheme.colors.textSecondary
         )
@@ -367,33 +382,100 @@ private fun PersonalisationStep(
 
         // Language
         Text(
-            text = "Preferred Language",
+            text = "Preferred Ugandan Language (17 Supported)",
             style = TendrilsTheme.typography.subtitle1,
             fontWeight = FontWeight.SemiBold,
             color = TendrilsTheme.colors.textPrimary
         )
-        Spacer(modifier = Modifier.height(8.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // Region Filter Chips
+        androidx.compose.foundation.lazy.LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
         ) {
-            languages.forEach { lang ->
-                val isSel = language == lang
+            items(regions.size) { idx ->
+                val reg = regions[idx]
+                val isSel = selectedRegion == reg
+                Box(
+                    modifier = Modifier
+                        .clip(PillShape)
+                        .background(if (isSel) TendrilsTheme.colors.primary else TendrilsTheme.colors.surfaceElevated)
+                        .clickable { selectedRegion = reg }
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = reg,
+                        style = TendrilsTheme.typography.caption,
+                        fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSel) Color.White else TendrilsTheme.colors.textSecondary
+                    )
+                }
+            }
+        }
+
+        // Language selection scrollable row or wrap
+        androidx.compose.foundation.lazy.LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+        ) {
+            items(displayedLanguages.size) { index ->
+                val ugLang = displayedLanguages[index]
+                val isSel = language == ugLang.name
                 TendrilsCard(
-                    modifier = Modifier.weight(1f),
                     shape = PillShape,
                     padding = 8.dp,
                     backgroundColor = if (isSel) TendrilsTheme.colors.primary.copy(alpha = 0.15f) else TendrilsTheme.colors.surface,
                     borderColor = if (isSel) TendrilsTheme.colors.primary else TendrilsTheme.colors.border,
-                    onClick = { onLanguageChange(lang) }
+                    onClick = { onLanguageChange(ugLang.name) }
                 ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(horizontal = 6.dp)
+                    ) {
+                        Text(
+                            text = ugLang.name,
+                            style = TendrilsTheme.typography.caption,
+                            fontWeight = if (isSel) FontWeight.Bold else FontWeight.SemiBold,
+                            color = if (isSel) TendrilsTheme.colors.primary else TendrilsTheme.colors.textPrimary
+                        )
+                        Text(
+                            text = ugLang.nativeName,
+                            style = TendrilsTheme.typography.caption,
+                            fontSize = 10.sp,
+                            color = if (isSel) TendrilsTheme.colors.primary.copy(alpha = 0.8f) else TendrilsTheme.colors.textMuted
+                        )
+                    }
+                }
+            }
+        }
+
+        // Sample Greeting Preview
+        TendrilsCard(
+            modifier = Modifier.fillMaxWidth(),
+            backgroundColor = TendrilsTheme.colors.surfaceElevated,
+            borderColor = TendrilsTheme.colors.border,
+            padding = 10.dp
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = null,
+                    tint = TendrilsTheme.colors.primary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Column {
                     Text(
-                        text = lang,
+                        text = "${activeUgLang.name} (${activeUgLang.region})",
                         style = TendrilsTheme.typography.caption,
-                        fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
-                        color = if (isSel) TendrilsTheme.colors.primary else TendrilsTheme.colors.textSecondary,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
+                        fontWeight = FontWeight.Bold,
+                        color = TendrilsTheme.colors.primary
+                    )
+                    Text(
+                        text = "\"${activeUgLang.sampleGreeting}\"",
+                        style = TendrilsTheme.typography.body2,
+                        color = TendrilsTheme.colors.textPrimary
                     )
                 }
             }

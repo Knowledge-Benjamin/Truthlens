@@ -124,15 +124,19 @@ fun HomeScreen() {
                 }
 
                 val followUps = generateFollowUps(query)
+                val finalContent = accumulated.ifBlank { generateCompanionResponse(query) }
                 messages = messages.map { msg ->
                     if (msg.id == assistantMsgId) {
                         msg.copy(
-                            content = accumulated.ifBlank { generateCompanionResponse(query) },
+                            content = finalContent,
                             followUps = followUps,
                             isStreaming = false
                         )
                     } else msg
                 }
+
+                // Voice output via native TTS engine
+                com.truthlens.voice.TendrilsTts.speak(finalContent)
 
                 delay(300)
                 companionState = CompanionState.COMPLETED
@@ -209,7 +213,23 @@ fun HomeScreen() {
             }
         }
 
-        // --- MAIN SCROLLABLE CONTENT (Avatar + Chat Thread) ---
+        // --- PINNED COMPANION HERO (Always visible, does not slide off screen) ---
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 4.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            CompanionAvatar(
+                state = companionState,
+                onStateSelected = { companionState = it },
+                size = 110.dp
+            )
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // --- MAIN SCROLLABLE CHAT THREAD ---
         LazyColumn(
             state = listState,
             modifier = Modifier
@@ -217,16 +237,6 @@ fun HomeScreen() {
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
         ) {
-            // Central Companion Avatar
-            item {
-                Spacer(modifier = Modifier.height(10.dp))
-                CompanionAvatar(
-                    state = companionState,
-                    onStateSelected = { companionState = it }
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
             // Suggestions Carousel
             item {
                 LazyRow(

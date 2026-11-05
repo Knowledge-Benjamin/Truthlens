@@ -220,9 +220,44 @@ fun ProfileScreen() {
                 }
             }
 
+            val isBriefAccount = selectedExperience == ExperienceMode.CHILD || selectedExperience == ExperienceMode.TEEN
+
+            // For Child and Student accounts, display a reassuring guidance banner
+            if (isBriefAccount) {
+                TendrilsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = TendrilsTheme.colors.surfaceElevated,
+                    borderColor = TendrilsTheme.colors.border,
+                    padding = 12.dp
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = TendrilsTheme.colors.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = "${selectedExperience.title} Account Active",
+                                style = TendrilsTheme.typography.subtitle1,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TendrilsTheme.colors.textPrimary
+                            )
+                            Text(
+                                text = "Settings are streamlined to essential preferences. Technical lab tools and raw model downloads are locked.",
+                                style = TendrilsTheme.typography.caption,
+                                color = TendrilsTheme.colors.textSecondary
+                            )
+                        }
+                    }
+                }
+            }
+
             // --- PRIVACY & PERMISSIONS GROUP ---
             Text(
-                text = "Privacy & Safety",
+                text = if (isBriefAccount) "Safety & Device Privacy" else "Privacy & Safety",
                 style = TendrilsTheme.typography.h3,
                 color = TendrilsTheme.colors.textPrimary
             )
@@ -233,51 +268,57 @@ fun ProfileScreen() {
                 padding = 6.dp
             ) {
                 Column {
-                    SettingsRow(
-                        title = "Security & Protection",
-                        subtitle = "Background media scanner • C2PA • Phishing guard",
-                        icon = Icons.Default.Check,
-                        onClick = { activeDialog = "security" }
-                    )
-                    Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
+                    if (!isBriefAccount) {
+                        SettingsRow(
+                            title = "Security & Protection",
+                            subtitle = "Background media scanner • C2PA • Phishing guard",
+                            icon = Icons.Default.Check,
+                            onClick = { activeDialog = "security" }
+                        )
+                        Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
+                    }
+
                     SettingsRow(
                         title = "Privacy & Local Data",
                         subtitle = "Strictly on-device storage • Local memory",
                         icon = Icons.Default.Check,
                         onClick = { activeDialog = "privacy" }
                     )
+
+                    if (!isBriefAccount) {
+                        Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
+                        SettingsRow(
+                            title = "System Permissions",
+                            subtitle = "Camera, Mic, Files (On-demand only)",
+                            icon = Icons.Default.Star,
+                            onClick = { activeDialog = "permissions" }
+                        )
+                    }
+
                     Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
                     SettingsRow(
-                        title = "System Permissions",
-                        subtitle = "Camera, Mic, Files (On-demand only)",
-                        icon = Icons.Default.Star,
-                        onClick = { activeDialog = "permissions" }
-                    )
-                    Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
-                    SettingsRow(
-                        title = "Family Experience",
-                        subtitle = "Transparent parental guidance without tracking",
+                        title = if (selectedExperience == ExperienceMode.CHILD) "Parental & Family Guidance" else "Family & Safety Experience",
+                        subtitle = "Transparent boundaries and safety guidelines without tracking",
                         icon = Icons.Default.Person,
                         onClick = { activeDialog = "family" }
                     )
                 }
             }
 
-            // --- TESTING & DEMONSTRATION TOOLS ---
-            Text(
-                text = "Testing & Flows",
-                style = TendrilsTheme.typography.h3,
-                color = TendrilsTheme.colors.textPrimary
-            )
+            // --- TESTING & DEMONSTRATION TOOLS (Adult / Developer Personal Mode Only) ---
+            if (!isBriefAccount) {
+                Text(
+                    text = "Testing & Flows (Developer Lab)",
+                    style = TendrilsTheme.typography.h3,
+                    color = TendrilsTheme.colors.textPrimary
+                )
 
-            TendrilsCard(
-                modifier = Modifier.fillMaxWidth(),
-                backgroundColor = TendrilsTheme.colors.surface,
-                padding = 6.dp
-            ) {
-                Column {
-                    // Model Manager Lab — hidden / locked in Child Experience Mode
-                    if (selectedExperience != ExperienceMode.CHILD) {
+                TendrilsCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = TendrilsTheme.colors.surface,
+                    padding = 6.dp
+                ) {
+                    Column {
                         SettingsRow(
                             title = "Model Manager (Lab)",
                             subtitle = "Downloads/Tendrils/models • TFLite & GGUF switch",
@@ -285,64 +326,48 @@ fun ProfileScreen() {
                             onClick = { activeDialog = "model_manager" }
                         )
                         Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
-                    } else {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(imageVector = Icons.Default.Info, contentDescription = null, tint = TendrilsTheme.colors.textMuted, modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text("Model Manager (Lab)", style = TendrilsTheme.typography.body2, fontWeight = FontWeight.SemiBold, color = TendrilsTheme.colors.textMuted)
-                                Text("Locked while in Child Experience Mode", style = TendrilsTheme.typography.caption, color = TendrilsTheme.colors.textMuted)
-                            }
-                        }
+                        SettingsRow(
+                            title = "Flow D: Deepfake & Image Scan",
+                            subtitle = "TFLite Artifact & Provenance inspection modal",
+                            icon = Icons.Default.Search,
+                            onClick = { activeDialog = "flow_d" }
+                        )
                         Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
+                        SettingsRow(
+                            title = "Flow E: OCR Document Reader",
+                            subtitle = "Local text extraction & study card generator",
+                            icon = Icons.Default.Info,
+                            onClick = { activeDialog = "flow_e" }
+                        )
+                        Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
+                        SettingsRow(
+                            title = "Flow F: Phishing Link Shield",
+                            subtitle = "Domain reputation & phishing heuristics",
+                            icon = Icons.Default.Check,
+                            onClick = { activeDialog = "flow_f" }
+                        )
+                        Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
+                        SettingsRow(
+                            title = "Flow G: Device Automation Task",
+                            subtitle = "Permission-controlled timer alert automation",
+                            icon = Icons.Default.Refresh,
+                            onClick = { activeDialog = "flow_g" }
+                        )
+                        Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
+                        SettingsRow(
+                            title = "Flow H: Family Device Pairing",
+                            subtitle = "Pairing code & transparent privacy controls",
+                            icon = Icons.Default.Person,
+                            onClick = { activeDialog = "flow_h" }
+                        )
+                        Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
+                        SettingsRow(
+                            title = "Replay Onboarding Flow",
+                            subtitle = "Re-experience the 5-step welcome & setup",
+                            icon = Icons.Default.Refresh,
+                            onClick = { onboardingController.value = false }
+                        )
                     }
-
-                    SettingsRow(
-                        title = "Flow D: Deepfake & Image Scan",
-                        subtitle = "TFLite Artifact & Provenance inspection modal",
-                        icon = Icons.Default.Search,
-                        onClick = { activeDialog = "flow_d" }
-                    )
-                    Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
-                    SettingsRow(
-                        title = "Flow E: OCR Document Reader",
-                        subtitle = "Local text extraction & study card generator",
-                        icon = Icons.Default.Info,
-                        onClick = { activeDialog = "flow_e" }
-                    )
-                    Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
-                    SettingsRow(
-                        title = "Flow F: Phishing Link Shield",
-                        subtitle = "Domain reputation & phishing heuristics",
-                        icon = Icons.Default.Check,
-                        onClick = { activeDialog = "flow_f" }
-                    )
-                    Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
-                    SettingsRow(
-                        title = "Flow G: Device Automation Task",
-                        subtitle = "Permission-controlled timer alert automation",
-                        icon = Icons.Default.Refresh,
-                        onClick = { activeDialog = "flow_g" }
-                    )
-                    Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
-                    SettingsRow(
-                        title = "Flow H: Family Device Pairing",
-                        subtitle = "Pairing code & transparent privacy controls",
-                        icon = Icons.Default.Person,
-                        onClick = { activeDialog = "flow_h" }
-                    )
-                    Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
-                    SettingsRow(
-                        title = "Replay Onboarding Flow",
-                        subtitle = "Re-experience the 5-step welcome & setup",
-                        icon = Icons.Default.Refresh,
-                        onClick = { onboardingController.value = false }
-                    )
                 }
             }
 

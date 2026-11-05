@@ -21,6 +21,8 @@ object LlamatikEngine {
     /**
      * Initializes a GGUF language model for on-device inference using llama.cpp JNI.
      */
+    fun initialize(modelPath: String): Boolean = initModel(modelPath)
+
     fun initModel(modelPath: String): Boolean {
         return try {
             val file = File(modelPath)

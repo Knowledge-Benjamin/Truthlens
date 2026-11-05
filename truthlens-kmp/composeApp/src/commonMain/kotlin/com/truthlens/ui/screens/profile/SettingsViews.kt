@@ -20,6 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.truthlens.ui.components.TendrilsCard
+import com.truthlens.ui.model.UgandanLanguageDirectory
+import com.truthlens.ui.model.UgandanLanguage
 import com.truthlens.ui.theme.*
 
 /**
@@ -100,29 +102,118 @@ fun SettingsSubScreenDialog(
 @Composable
 fun LanguageVoiceSettingsDialog(onDismiss: () -> Unit) {
     var selectedLang by remember { mutableStateOf("English") }
+    var selectedRegion by remember { mutableStateOf("All") }
     var selectedVoice by remember { mutableStateOf("Gentle Sprout (Warm & Calm)") }
     var speechSpeed by remember { mutableStateOf(1.0f) }
     var voiceMode by remember { mutableStateOf("Text and Voice") }
+
+    val regions = listOf("All", "Central", "Eastern", "Northern", "Western", "National")
+
+    val displayedLanguages = remember(selectedRegion) {
+        if (selectedRegion == "All") {
+            UgandanLanguageDirectory.languages
+        } else {
+            UgandanLanguageDirectory.languages.filter { it.region.contains(selectedRegion, ignoreCase = true) }
+        }
+    }
+
+    val activeUgLang = UgandanLanguageDirectory.languages.find { it.name.equals(selectedLang, ignoreCase = true) }
+        ?: UgandanLanguageDirectory.languages.first()
 
     SettingsSubScreenDialog(
         title = "Language & Voice",
         icon = Icons.Default.Info,
         onDismiss = onDismiss
     ) {
-        Text("Primary Language", style = TendrilsTheme.typography.subtitle1, fontWeight = FontWeight.SemiBold, color = TendrilsTheme.colors.textPrimary)
-        val langs = listOf("English", "Kiswahili", "French", "Spanish")
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            langs.forEach { lang ->
-                val isSel = selectedLang == lang
+        Text(
+            text = "Primary Ugandan Language (17 Supported)",
+            style = TendrilsTheme.typography.subtitle1,
+            fontWeight = FontWeight.SemiBold,
+            color = TendrilsTheme.colors.textPrimary
+        )
+
+        // Region Filter Chips
+        androidx.compose.foundation.lazy.LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+        ) {
+            items(regions.size) { idx ->
+                val reg = regions[idx]
+                val isSel = selectedRegion == reg
+                Box(
+                    modifier = Modifier
+                        .clip(PillShape)
+                        .background(if (isSel) TendrilsTheme.colors.primary else TendrilsTheme.colors.surfaceElevated)
+                        .clickable { selectedRegion = reg }
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = reg,
+                        style = TendrilsTheme.typography.caption,
+                        fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSel) Color.White else TendrilsTheme.colors.textSecondary
+                    )
+                }
+            }
+        }
+
+        // Language selection scrollable list
+        androidx.compose.foundation.lazy.LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+        ) {
+            items(displayedLanguages.size) { index ->
+                val ugLang = displayedLanguages[index]
+                val isSel = selectedLang == ugLang.name
                 TendrilsCard(
-                    modifier = Modifier.weight(1f),
                     shape = PillShape,
                     padding = 8.dp,
                     backgroundColor = if (isSel) TendrilsTheme.colors.primary.copy(alpha = 0.16f) else TendrilsTheme.colors.surfaceElevated,
                     borderColor = if (isSel) TendrilsTheme.colors.primary else TendrilsTheme.colors.border,
-                    onClick = { selectedLang = lang }
+                    onClick = { selectedLang = ugLang.name }
                 ) {
-                    Text(text = lang, style = TendrilsTheme.typography.caption, fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal, color = if (isSel) TendrilsTheme.colors.primary else TendrilsTheme.colors.textSecondary)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(horizontal = 6.dp)
+                    ) {
+                        Text(
+                            text = ugLang.name,
+                            style = TendrilsTheme.typography.caption,
+                            fontWeight = if (isSel) FontWeight.Bold else FontWeight.SemiBold,
+                            color = if (isSel) TendrilsTheme.colors.primary else TendrilsTheme.colors.textPrimary
+                        )
+                        Text(
+                            text = ugLang.nativeName,
+                            style = TendrilsTheme.typography.caption,
+                            fontSize = 10.sp,
+                            color = if (isSel) TendrilsTheme.colors.primary.copy(alpha = 0.8f) else TendrilsTheme.colors.textMuted
+                        )
+                    }
+                }
+            }
+        }
+
+        // Selected Language Greeting Preview
+        TendrilsCard(
+            modifier = Modifier.fillMaxWidth(),
+            backgroundColor = TendrilsTheme.colors.surfaceElevated,
+            padding = 10.dp
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(imageVector = Icons.Default.Info, contentDescription = null, tint = TendrilsTheme.colors.primary, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Column {
+                    Text(
+                        text = "${activeUgLang.name} • ${activeUgLang.region}",
+                        style = TendrilsTheme.typography.caption,
+                        fontWeight = FontWeight.Bold,
+                        color = TendrilsTheme.colors.primary
+                    )
+                    Text(
+                        text = "\"${activeUgLang.sampleGreeting}\"",
+                        style = TendrilsTheme.typography.body2,
+                        color = TendrilsTheme.colors.textPrimary
+                    )
                 }
             }
         }
@@ -163,6 +254,30 @@ fun LanguageVoiceSettingsDialog(onDismiss: () -> Unit) {
             steps = 2,
             colors = SliderDefaults.colors(thumbColor = TendrilsTheme.colors.primary, activeTrackColor = TendrilsTheme.colors.primary)
         )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Native TTS Audio Preview Button
+        Button(
+            onClick = {
+                val sampleGreeting = activeUgLang.sampleGreeting
+                com.truthlens.voice.TendrilsTts.speak(
+                    text = sampleGreeting,
+                    languageCode = activeUgLang.code,
+                    speed = speechSpeed
+                )
+            },
+            modifier = Modifier.fillMaxWidth().height(42.dp),
+            shape = PillShape,
+            colors = ButtonDefaults.buttonColors(
+                backgroundColor = TendrilsTheme.colors.surfaceElevated,
+                contentColor = TendrilsTheme.colors.primary
+            )
+        ) {
+            Icon(imageVector = Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Preview Voice (Native TTS Engine)", style = TendrilsTheme.typography.caption, fontWeight = FontWeight.Bold)
+        }
     }
 }
 

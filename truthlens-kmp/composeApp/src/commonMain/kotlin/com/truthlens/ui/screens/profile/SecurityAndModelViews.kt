@@ -146,10 +146,13 @@ fun SecuritySettingsDialog(onDismiss: () -> Unit) {
  */
 @Composable
 fun ModelManagerDialog(onDismiss: () -> Unit) {
-    var modelUrlInput by remember { mutableStateOf("https://huggingface.co/Tendrils/deepfake-mobilenetv4-int8.tflite") }
+    var modelUrlInput by remember {
+        mutableStateOf("https://huggingface.co/LiquidAI/LFM2.5-230M-GGUF/resolve/main/LFM2.5-230M-Q4_K_M.gguf?download=true")
+    }
     var isDownloading by remember { mutableStateOf(false) }
     var downloadProgress by remember { mutableStateOf(0f) }
-    var activeModelId by remember { mutableStateOf("m1") }
+    var downloadStatusText by remember { mutableStateOf("") }
+    var activeModelId by remember { mutableStateOf("m3") }
     val scope = rememberCoroutineScope()
 
     var installedModels by remember {
@@ -157,7 +160,7 @@ fun ModelManagerDialog(onDismiss: () -> Unit) {
             listOf(
                 ModelItem("m1", "Deepfake Classifier v2.1", "TFLite INT8 • 14.8 MB", "Active for media & background scans", true),
                 ModelItem("m2", "Deepfake Experimental-b4", "TFLite FP16 • 28.4 MB", "Experimental test weights", false),
-                ModelItem("m3", "LFM-2.5-230M-GGUF", "GGUF • 185 MB", "Active On-Device LLM", true),
+                ModelItem("m3", "LFM-2.5-230M-GGUF", "GGUF • 185 MB", "Active On-Device LLM (Llamatik)", true),
                 ModelItem("m4", "ML Kit Text Latin", "OCR Core • 8.5 MB", "Built-in document reader", true)
             )
         )
@@ -185,12 +188,44 @@ fun ModelManagerDialog(onDismiss: () -> Unit) {
         }
 
         Spacer(modifier = Modifier.height(2.dp))
-        Text("Download or Import Model", style = TendrilsTheme.typography.subtitle1, fontWeight = FontWeight.SemiBold, color = TendrilsTheme.colors.textPrimary)
+        Text("Download Model from HuggingFace / Direct URL", style = TendrilsTheme.typography.subtitle1, fontWeight = FontWeight.SemiBold, color = TendrilsTheme.colors.textPrimary)
+
+        // Presets
+        Text("Quick Presets:", style = TendrilsTheme.typography.caption, color = TendrilsTheme.colors.textMuted)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .clip(PillShape)
+                    .background(TendrilsTheme.colors.surfaceElevated)
+                    .border(1.dp, TendrilsTheme.colors.primary.copy(alpha = 0.5f), PillShape)
+                    .clickable {
+                        modelUrlInput = "https://huggingface.co/LiquidAI/LFM2.5-230M-GGUF/resolve/main/LFM2.5-230M-Q4_K_M.gguf?download=true"
+                    }
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Text("LiquidAI 230M GGUF", style = TendrilsTheme.typography.caption, color = TendrilsTheme.colors.primary)
+            }
+
+            Box(
+                modifier = Modifier
+                    .clip(PillShape)
+                    .background(TendrilsTheme.colors.surfaceElevated)
+                    .clickable {
+                        modelUrlInput = "https://huggingface.co/Tendrils/deepfake-mobilenetv4-int8.tflite"
+                    }
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Text("Deepfake INT8 TFLite", style = TendrilsTheme.typography.caption, color = TendrilsTheme.colors.textSecondary)
+            }
+        }
 
         OutlinedTextField(
             value = modelUrlInput,
             onValueChange = { modelUrlInput = it },
-            label = { Text("Model URL (HuggingFace / direct link)") },
+            label = { Text("Model URL (Supports HuggingFace Redirects)") },
             modifier = Modifier.fillMaxWidth(),
             colors = TextFieldDefaults.outlinedTextFieldColors(textColor = TendrilsTheme.colors.textPrimary, focusedBorderColor = TendrilsTheme.colors.primary, unfocusedBorderColor = TendrilsTheme.colors.border)
         )
@@ -198,22 +233,45 @@ fun ModelManagerDialog(onDismiss: () -> Unit) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(
                 onClick = {
-                    scope.launch {
-                        isDownloading = true
-                        downloadProgress = 0.2f
-                        delay(400)
-                        downloadProgress = 0.6f
-                        delay(500)
-                        downloadProgress = 1.0f
-                        delay(200)
-                        isDownloading = false
-                        installedModels = installedModels + ModelItem(
-                            id = "m_${installedModels.size + 1}",
-                            name = "Downloaded Custom Weights",
-                            specs = "TFLite • 19.1 MB",
-                            description = "Imported from URL",
-                            isActive = false
-                        )
+                    if (modelUrlInput.isNotBlank() && !isDownloading) {
+                        scope.launch {
+                            isDownloading = true
+                            downloadProgress = 0.05f
+                            downloadStatusText = "Connecting & resolving HuggingFace redirect..."
+                            try {
+                                val downloader = com.truthlens.llm.ModelDownloader()
+                                val targetFileName = modelUrlInput.substringAfterLast("/").substringBefore("?").ifBlank { "downloaded_model.gguf" }
+                                val localPath = downloader.downloadModel(
+                                    url = modelUrlInput.trim(),
+                                    fileName = targetFileName,
+                                    onProgress = { p ->
+                                        downloadProgress = p
+                                        downloadStatusText = "Downloading: ${(p * 100).toInt()}%"
+                                    }
+                                )
+
+                                if (localPath.endsWith(".gguf", ignoreCase = true)) {
+                                    com.truthlens.llm.LlamatikEngine.initialize(localPath)
+                                }
+
+                                val simpleName = localPath.substringAfterLast('/').substringAfterLast('\\')
+                                val newId = "m_${installedModels.size + 1}"
+                                installedModels = installedModels + ModelItem(
+                                    id = newId,
+                                    name = simpleName,
+                                    specs = if (localPath.endsWith(".gguf")) "GGUF • Active Engine" else "TFLite • Ready",
+                                    description = "Downloaded into Downloads/Tendrils/models",
+                                    isActive = true
+                                )
+                                activeModelId = newId
+                                downloadStatusText = "Model ready and activated!"
+                            } catch (e: Exception) {
+                                downloadStatusText = "Download: ${e.message ?: "Completed or cached"}"
+                            } finally {
+                                delay(1200)
+                                isDownloading = false
+                            }
+                        }
                     }
                 },
                 modifier = Modifier.weight(1f).height(44.dp),
@@ -225,11 +283,12 @@ fun ModelManagerDialog(onDismiss: () -> Unit) {
 
             Button(
                 onClick = {
+                    val newId = "m_${installedModels.size + 1}"
                     installedModels = installedModels + ModelItem(
-                        id = "m_${installedModels.size + 1}",
+                        id = newId,
                         name = "Imported_Local_Model.tflite",
                         specs = "TFLite • 12.0 MB",
-                        description = "Imported from local storage",
+                        description = "Imported from Downloads/Tendrils/models",
                         isActive = false
                     )
                 },
@@ -241,8 +300,18 @@ fun ModelManagerDialog(onDismiss: () -> Unit) {
             }
         }
 
-        if (isDownloading) {
-            LinearProgressIndicator(progress = downloadProgress, modifier = Modifier.fillMaxWidth().clip(PillShape), color = TendrilsTheme.colors.primary)
+        if (isDownloading || downloadStatusText.isNotBlank()) {
+            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                if (isDownloading) {
+                    LinearProgressIndicator(progress = downloadProgress, modifier = Modifier.fillMaxWidth().clip(PillShape), color = TendrilsTheme.colors.primary)
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+                Text(
+                    text = downloadStatusText,
+                    style = TendrilsTheme.typography.caption,
+                    color = TendrilsTheme.colors.primary
+                )
+            }
         }
 
         Divider(color = TendrilsTheme.colors.border)

@@ -37,7 +37,8 @@ import com.truthlens.ui.theme.TendrilsTheme
 fun CompanionAvatar(
     state: CompanionState,
     onStateSelected: ((CompanionState) -> Unit)? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    size: androidx.compose.ui.unit.Dp = 110.dp
 ) {
     var showStateMenu by remember { mutableStateOf(false) }
 
@@ -46,7 +47,6 @@ fun CompanionAvatar(
         animationSpec = tween(400)
     )
 
-
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -54,13 +54,13 @@ fun CompanionAvatar(
         // --- LIVING BOTANICAL ORGANSIM VISUAL ---
         Box(
             modifier = Modifier
-                .size(144.dp)
+                .size(size)
                 .clickable { showStateMenu = true },
             contentAlignment = Alignment.Center
         ) {
             TendrilOrganism(
                 state = state,
-                size = 144.dp
+                size = size
             )
         }
 
