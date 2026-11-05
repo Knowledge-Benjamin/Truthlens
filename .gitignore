@@ -1,0 +1,36 @@
+# Secrets — never commit
+.env
+**/.env
+!**/.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+venv/
+.venv/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+
+# Docker
+# (keep Dockerfiles and compose, just ignore local state)
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Model cache / data
+*.pt
+*.bin
+*.safetensors
+model_cache/
+
+# Logs
+*.log
