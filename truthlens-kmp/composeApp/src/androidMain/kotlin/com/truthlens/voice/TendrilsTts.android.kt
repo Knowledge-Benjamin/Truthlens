@@ -6,6 +6,7 @@ import android.speech.tts.UtteranceProgressListener
 import java.util.Locale
 
 actual object TendrilsTts {
+    actual var isMuted: Boolean = false
     private var tts: TextToSpeech? = null
     private var isReady = false
     private var currentlySpeaking = false
@@ -47,12 +48,16 @@ actual object TendrilsTts {
                         }
 
                         override fun onDone(utteranceId: String?) {
-                            currentlySpeaking = false
+                            if (tts?.isSpeaking != true) {
+                                currentlySpeaking = false
+                            }
                         }
 
                         @Deprecated("Deprecated in Java")
                         override fun onError(utteranceId: String?) {
-                            currentlySpeaking = false
+                            if (tts?.isSpeaking != true) {
+                                currentlySpeaking = false
+                            }
                         }
                     })
                 }
@@ -67,7 +72,7 @@ actual object TendrilsTts {
     }
 
     actual fun speakChunk(text: String, flush: Boolean, languageCode: String, pitch: Float, speed: Float) {
-        if (!isReady || tts == null) return
+        if (isMuted || !isReady || tts == null) return
         try {
             val locale = when (languageCode.lowercase()) {
                 "sw", "kiswahili" -> Locale("sw")

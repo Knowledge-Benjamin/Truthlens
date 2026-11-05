@@ -1,6 +1,7 @@
 package com.truthlens.voice
 
 actual object TendrilsTts {
+    actual var isMuted: Boolean = false
     private var currentlySpeaking = false
 
     actual fun speak(text: String, languageCode: String, pitch: Float, speed: Float) {

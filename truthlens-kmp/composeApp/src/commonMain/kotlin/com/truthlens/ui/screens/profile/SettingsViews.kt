@@ -245,6 +245,49 @@ fun LanguageVoiceSettingsDialog(onDismiss: () -> Unit) {
 
         Divider(color = TendrilsTheme.colors.border)
 
+        // TTS Audio Mute Toggle
+        var isTtsMuted by remember { mutableStateOf(com.truthlens.voice.TendrilsTts.isMuted) }
+        TendrilsCard(
+            modifier = Modifier.fillMaxWidth(),
+            backgroundColor = TendrilsTheme.colors.surfaceElevated,
+            borderColor = TendrilsTheme.colors.border,
+            padding = 10.dp
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Voice Audio (TTS)",
+                        style = TendrilsTheme.typography.subtitle2,
+                        fontWeight = FontWeight.Bold,
+                        color = TendrilsTheme.colors.textPrimary
+                    )
+                    Text(
+                        text = if (isTtsMuted) "Muted (Silent replies)" else "Spoken voice responses enabled",
+                        style = TendrilsTheme.typography.caption,
+                        color = TendrilsTheme.colors.textSecondary
+                    )
+                }
+                Switch(
+                    checked = !isTtsMuted,
+                    onCheckedChange = { enabled ->
+                        isTtsMuted = !enabled
+                        com.truthlens.voice.TendrilsTts.isMuted = !enabled
+                        if (!enabled) {
+                            com.truthlens.voice.TendrilsTts.stop()
+                        }
+                    },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = TendrilsTheme.colors.primary,
+                        checkedTrackColor = TendrilsTheme.colors.primary.copy(alpha = 0.5f)
+                    )
+                )
+            }
+        }
+
         val speedDisplay = ((speechSpeed * 10).toInt() / 10f).toString()
         Text("Speech Speed: ${speedDisplay}x", style = TendrilsTheme.typography.subtitle1, fontWeight = FontWeight.SemiBold, color = TendrilsTheme.colors.textPrimary)
         Slider(
@@ -521,12 +564,14 @@ fun EditProfileDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Row(
+                val archetypes = remember { com.truthlens.ui.components.AvatarArchetype.entries.toList() }
+                androidx.compose.foundation.lazy.LazyRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    com.truthlens.ui.components.AvatarArchetype.entries.forEach { arc ->
+                    items(count = archetypes.size) { idx ->
+                        val arc = archetypes[idx]
                         val isSel = com.truthlens.ui.components.AvatarManager.selectedArchetype == arc
                         Box(
                             modifier = Modifier

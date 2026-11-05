@@ -148,13 +148,15 @@ fun ProfileScreen() {
 
                     Divider(color = TendrilsTheme.colors.border.copy(alpha = 0.5f))
 
-                    // 5 Selectable Companion Avatars
-                    Row(
+                    // Selectable Companion Avatars (Scrollable 10 Friendly Variations)
+                    val archetypes = remember { com.truthlens.ui.components.AvatarArchetype.entries.toList() }
+                    androidx.compose.foundation.lazy.LazyRow(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        com.truthlens.ui.components.AvatarArchetype.entries.forEach { arc ->
+                        items(count = archetypes.size) { idx ->
+                            val arc = archetypes[idx]
                             val isSelected = com.truthlens.ui.components.AvatarManager.selectedArchetype == arc
                             Box(
                                 modifier = Modifier

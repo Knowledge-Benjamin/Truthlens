@@ -158,9 +158,16 @@ fun HomeScreen() {
                         com.truthlens.voice.TendrilsTts.speakChunk(ttsChunkBuffer, flush = isFirstTtsChunk)
                     }
 
-                    delay(300)
+                    // Keep avatar speaking as long as TTS is actively playing audio
+                    var speechWaitCount = 0
+                    while (com.truthlens.voice.TendrilsTts.isSpeaking() && speechWaitCount < 350) {
+                        delay(100)
+                        speechWaitCount++
+                    }
+
+                    delay(200)
                     companionState = CompanionState.COMPLETED
-                    delay(1000)
+                    delay(800)
                     companionState = CompanionState.IDLE
                 } catch (e: Throwable) {
                     println("HomeScreen message processing error: ${e.message}")
