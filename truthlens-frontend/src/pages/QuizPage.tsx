@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useContext } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
@@ -8,6 +8,7 @@ import {
 import { QuizQuestion } from '../types'
 import { cn } from '../utils/helpers'
 import { useLanguage } from '../i18n/LanguageContext'
+import { ProgressContext } from '../context/ProgressContext'
 
 const questions: QuizQuestion[] = [
   {
@@ -111,6 +112,7 @@ export default function QuizPage() {
   const [answers, setAnswers] = useState<boolean[]>([])
   const [finished, setFinished] = useState(false)
   const { t } = useLanguage()
+  const progressCtx = useContext(ProgressContext)
 
   const question = questions[currentQ]
   const total = questions.length
@@ -142,6 +144,7 @@ export default function QuizPage() {
       setAnswered(false)
     } else {
       setFinished(true)
+      progressCtx?.recordQuiz(score, total)
     }
   }
 

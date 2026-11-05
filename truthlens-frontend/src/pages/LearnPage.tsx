@@ -7,6 +7,8 @@ import {
 } from 'lucide-react'
 import { LessonModule, TipCard } from '../types'
 import { useLanguage } from '../i18n/LanguageContext'
+import { useContext } from 'react'
+import { ProgressContext } from '../context/ProgressContext'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -210,9 +212,13 @@ const lessonContent: Record<string, { heading: string; body: string[]; tip?: str
 export default function LearnPage() {
   const [selectedModule, setSelectedModule] = useState<string | null>(null)
   const { t } = useLanguage()
+  const progressCtx = useContext(ProgressContext)
 
   const handleModuleClick = (id: string) => {
     setSelectedModule(selectedModule === id ? null : id)
+    if (selectedModule !== id) {
+      progressCtx?.recordLesson(id)
+    }
   }
 
   return (

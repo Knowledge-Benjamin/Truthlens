@@ -7,6 +7,8 @@ import AnalysisResult from '../components/AnalysisResult'
 import { analyzeMedia } from '../utils/api'
 import { DetectionResult, UploadState } from '../types'
 import { useLanguage } from '../i18n/LanguageContext'
+import { useContext } from 'react'
+import { ProgressContext } from '../context/ProgressContext'
 
 const PAGE_TRANSITION = {
   initial: { opacity: 0, y: 20 },
@@ -54,6 +56,7 @@ export default function DetectorPage() {
       setUploadState({ status: 'done', progress: 100 })
       setResult(data)
       setHistory(prev => [data, ...prev].slice(0, 10))
+      progressCtx?.recordScan(data.prediction, data.fileType)
     } catch (err: unknown) {
       stopProgress()
       const msg = err instanceof Error ? err.message : 'Analysis failed. Please try again.'
@@ -70,6 +73,7 @@ export default function DetectorPage() {
 
   const isAnalyzing = uploadState.status === 'analyzing' || uploadState.status === 'uploading'
   const { t } = useLanguage()
+  const progressCtx = useContext(ProgressContext)
 
   return (
     <motion.div {...PAGE_TRANSITION} className="min-h-screen pt-20 hero-bg">

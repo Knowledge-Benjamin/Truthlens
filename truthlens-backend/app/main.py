@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import HOST, PORT
 from app.routers import detect as detect_router
 from app.routers import translate as translate_router
+from app.routers import extras as extras_router
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -79,6 +80,7 @@ app.add_middleware(
 # Mount routers
 app.include_router(detect_router.router, prefix="/api", tags=["detection"])
 app.include_router(translate_router.router, prefix="/api", tags=["translation"])
+app.include_router(extras_router.router, prefix="/api", tags=["extras"])
 
 
 @app.get("/")

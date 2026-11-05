@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { DetectionResult } from '../types'
 import { cn, formatDuration } from '../utils/helpers'
 import { useLanguage } from '../i18n/LanguageContext'
+import HeatmapOverlay from './HeatmapOverlay'
 
 interface Props {
   result: DetectionResult
@@ -16,6 +17,9 @@ interface Props {
 export default function AnalysisResult({ result, onReset }: Props) {
   const [expandDetails, setExpandDetails] = useState(false)
   const { t } = useLanguage()
+
+  // Persist result for Report page
+  try { localStorage.setItem('last_scan_result', JSON.stringify(result)) } catch {}
 
   const isFake = result.prediction === 'FAKE'
   const isReal = result.prediction === 'REAL'
@@ -209,6 +213,19 @@ export default function AnalysisResult({ result, onReset }: Props) {
           </div>
         </motion.div>
       )}
+
+      {/* Visual explainability — heatmap / explanation (Feature 5) */}
+      {(result.heatmapUrl || result.explanation) && result.fileType !== 'audio' && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}>
+          <HeatmapOverlay
+            imageUrl=""
+            heatmapUrl={result.heatmapUrl}
+            explanation={result.explanation}
+            prediction={result.prediction}
+          />
+        </motion.div>
+      )}
+
       {isReal && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
           className="rounded-xl p-4 bg-accent-500/10 border border-accent-500/20 flex items-start gap-3">

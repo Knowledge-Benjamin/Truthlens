@@ -104,6 +104,7 @@ async def detect(file: UploadFile = File(...)):
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "modelUsed": result["model_used"],
             "processingTime": result["processing_time"],
+            "explanation": result.get("explanation", ""),
             "provenance": {"has_credentials": False, "note": "C2PA check available"},
         }
 

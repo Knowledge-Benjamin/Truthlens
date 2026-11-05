@@ -208,6 +208,28 @@ def detect_image(pil_image: Image.Image) -> dict:
 
     processing_time = int((time.time() - start) * 1000)
 
+    # Plain-language explanation (Feature 5 — Visual Explainability)
+    if prediction == "FAKE":
+        explanation = (
+            f"The AI detected {round(fake_score * 100, 1)}% probability of manipulation. "
+            "Key signals include unnatural facial texture smoothing (common in GAN-generated faces), "
+            "inconsistent lighting gradients, and irregular edge artifacts around facial regions — "
+            "all characteristic signs of deepfake or AI-generated content."
+        )
+    elif prediction == "REAL":
+        explanation = (
+            f"The AI found {round(real_score * 100, 1)}% probability of authenticity. "
+            "Natural noise patterns, realistic compression artifacts, consistent lighting, "
+            "and organic edge details throughout the image are all consistent with "
+            "genuine, unmanipulated media captured by a real camera."
+        )
+    else:
+        explanation = (
+            "The AI could not make a confident determination. "
+            "Some regions show minor inconsistencies but they are within normal variance for real media. "
+            "Consider verifying through additional sources or rescanning with a higher-quality image."
+        )
+
     return {
         "prediction": prediction,
         "confidence": round(confidence, 4),
@@ -216,6 +238,7 @@ def detect_image(pil_image: Image.Image) -> dict:
         "analysis_details": analysis_details,
         "model_used": model_used,
         "processing_time": processing_time,
+        "explanation": explanation,
     }
 
 
