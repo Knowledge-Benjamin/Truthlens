@@ -1,6 +1,7 @@
 package com.truthlens.ui.screens
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,11 +19,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
+import com.truthlens.llm.ConversationMemory
 import com.truthlens.ui.chat.TendrilsMessageBubble
 import com.truthlens.ui.chat.ThinkingIndicator
 import com.truthlens.ui.components.CompanionAvatar
@@ -34,19 +42,10 @@ import com.truthlens.ui.screens.flows.*
 import com.truthlens.ui.theme.PillShape
 import com.truthlens.ui.theme.TendrilsPalette
 import com.truthlens.ui.theme.TendrilsTheme
+import com.truthlens.voice.TendrilsStt
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/**
- * HomeScreen — Personal AI Companion
- * Milestone 2 Implementation:
- * - Top greeting & profile access
- * - Central CompanionAvatar with 8 distinct assistant states
- * - Contextual suggestions
- * - Interactive conversation stream with rich responses
- * - Floating input bar with mic and attachment actions
- */
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun HomeScreen() {
     val tabNavigator = LocalTabNavigator.current
@@ -56,35 +55,32 @@ fun HomeScreen() {
     var companionState by remember { mutableStateOf(CompanionState.IDLE) }
     var inputText by remember { mutableStateOf("") }
     var showAttachmentSheet by remember { mutableStateOf(false) }
+    var showHistoryDialog by remember { mutableStateOf(false) }
     var activeFlowModal by remember { mutableStateOf<String?>(null) }
 
-    // Conversation state
-    var messages by remember {
-        mutableStateOf(
-            listOf(
-                ChatMessage(
-                    id = "msg_init",
-                    role = ChatMessage.Role.ASSISTANT,
-                    content = "# Hello, Explorer!\nI am Tendrils, your personal companion. What would you like to explore or learn today?\n- Ask me to explain any complex subject\n- Test suspicious links or messages\n- Brainstorm creative stories and study plans",
-                    followUps = listOf(
-                        "How do search engines work?",
-                        "How do I spot a fake online link?",
-                        "Help me create a revision schedule"
-                    )
-                )
+    val initialWelcomeMessage = remember {
+        ChatMessage(
+            id = "msg_init",
+            role = ChatMessage.Role.ASSISTANT,
+            content = "# Hello, Explorer!\nI am Tendrils, your personal companion. What would you like to explore or learn today?\n- Ask me to explain any complex subject\n- Test suspicious links or messages\n- Brainstorm creative stories and study plans",
+            followUps = listOf(
+                "How do search engines work?",
+                "How do I spot a fake online link?",
+                "Help me create a revision schedule"
             )
         )
     }
+
+    var messages by remember { mutableStateOf(listOf(initialWelcomeMessage)) }
 
     val suggestions = listOf(
         "Explain something",
         "Help me learn",
         "Check a link",
         "Read a document",
-        "Ask anything"
+        "Continue"
     )
 
-    // Function to handle sending a query with real LlamatikEngine streaming
     val onSendMessage: (String) -> Unit = { query ->
         if (query.isNotBlank() && companionState != CompanionState.THINKING) {
             val userMsg = ChatMessage(
@@ -95,12 +91,11 @@ fun HomeScreen() {
             messages = messages + userMsg
             inputText = ""
 
-            // Trigger Assistant State Sequence: Thinking -> Speaking (Streaming) -> Completed -> Idle
             coroutineScope.launch {
                 try {
                     try { listState.scrollToItem(messages.size - 1) } catch (_: Throwable) {}
                     companionState = CompanionState.THINKING
-                    delay(180)
+                    delay(160)
 
                     val assistantMsgId = "a_${messages.size}"
                     var accumulated = ""
@@ -116,7 +111,7 @@ fun HomeScreen() {
                     var ttsChunkBuffer = ""
                     var isFirstTtsChunk = true
 
-                    // Real streaming from Llamatik engine with early 5-word TTS start
+                    // Real streaming from Llamatik engine with early 5-word TTS start & ConversationMemory
                     com.truthlens.llm.LlamatikEngine.generateStreaming(query).collect { token ->
                         accumulated += token
                         ttsChunkBuffer += token
@@ -157,7 +152,6 @@ fun HomeScreen() {
                         } else msg
                     }
 
-                    // Flush any remaining unspoken trailing words (or full fallback response)
                     if (accumulated.isBlank()) {
                         com.truthlens.voice.TendrilsTts.speakChunk(finalContent, flush = true)
                     } else if (ttsChunkBuffer.any { it.isLetterOrDigit() }) {
@@ -182,7 +176,7 @@ fun HomeScreen() {
             .background(TendrilsTheme.colors.background)
             .statusBarsPadding()
     ) {
-        // --- TOP SECTION: GREETING & PROFILE ACCESS ---
+        // --- TOP SECTION: GREETING, MEMORY/HISTORY & PROFILE ACCESS ---
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -190,7 +184,7 @@ fun HomeScreen() {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "Welcome back,",
                     style = TendrilsTheme.typography.caption,
@@ -205,8 +199,36 @@ fun HomeScreen() {
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // Memory & History Button
+                Box(
+                    modifier = Modifier
+                        .clip(PillShape)
+                        .background(TendrilsTheme.colors.surfaceElevated)
+                        .border(1.dp, TendrilsTheme.colors.border, PillShape)
+                        .clickable { showHistoryDialog = true }
+                        .padding(horizontal = 10.dp, vertical = 5.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "History and Memory",
+                            tint = TendrilsTheme.colors.primary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = "Memory (${ConversationMemory.turns.size})",
+                            style = TendrilsTheme.typography.caption,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TendrilsTheme.colors.textPrimary
+                        )
+                    }
+                }
+
                 // Quick State Indicator Pill
                 Box(
                     modifier = Modifier
@@ -302,14 +324,12 @@ fun HomeScreen() {
                 )
             }
 
-            // Thinking State Indicator
             if (companionState == CompanionState.THINKING) {
                 item {
                     ThinkingIndicator()
                 }
             }
 
-            // Spacer for comfortable scrolling
             item {
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -322,7 +342,7 @@ fun HomeScreen() {
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             shape = PillShape,
             backgroundColor = TendrilsTheme.colors.surface,
-            borderColor = TendrilsTheme.colors.border,
+            borderColor = if (companionState == CompanionState.LISTENING) TendrilsPalette.Indigo400 else TendrilsTheme.colors.border,
             padding = 6.dp
         ) {
             Row(
@@ -359,9 +379,9 @@ fun HomeScreen() {
                     onValueChange = { inputText = it },
                     placeholder = {
                         Text(
-                            text = "Ask Tendrils anything...",
+                            text = if (companionState == CompanionState.LISTENING) "Listening... Speak now" else "Ask Tendrils anything...",
                             style = TendrilsTheme.typography.body1,
-                            color = TendrilsTheme.colors.textMuted
+                            color = if (companionState == CompanionState.LISTENING) TendrilsPalette.Indigo400 else TendrilsTheme.colors.textMuted
                         )
                     },
                     modifier = Modifier
@@ -377,31 +397,49 @@ fun HomeScreen() {
                     singleLine = true
                 )
 
-                // Voice / Mic Demonstration Button
-                IconButton(
-                    onClick = {
-                        // Toggle Listening state demo
-                        if (companionState == CompanionState.LISTENING) {
-                            companionState = CompanionState.IDLE
-                        } else {
-                            companionState = CompanionState.LISTENING
-                            coroutineScope.launch {
-                                delay(2500)
-                                if (companionState == CompanionState.LISTENING) {
-                                    inputText = "Can you explain how search engines work?"
-                                    companionState = CompanionState.IDLE
-                                }
+                // Real Talk / Microphone Recording & Transcription Button
+                val isRecording = companionState == CompanionState.LISTENING
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (isRecording) TendrilsPalette.Indigo400.copy(alpha = 0.18f)
+                            else Color.Transparent
+                        )
+                        .clickable {
+                            if (isRecording) {
+                                TendrilsStt.stopListening()
+                                companionState = CompanionState.IDLE
+                            } else {
+                                companionState = CompanionState.LISTENING
+                                TendrilsStt.startListening(
+                                    languageCode = "en-US",
+                                    onPartialResult = { partial ->
+                                        inputText = partial
+                                    },
+                                    onFinalResult = { transcript ->
+                                        companionState = CompanionState.IDLE
+                                        if (transcript.isNotBlank()) {
+                                            inputText = transcript
+                                            onSendMessage(transcript)
+                                        }
+                                    },
+                                    onError = { _ ->
+                                        companionState = CompanionState.IDLE
+                                    }
+                                )
                             }
-                        }
-                    },
-                    modifier = Modifier.size(40.dp)
+                        },
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Share,
-                        contentDescription = "Voice mode",
-                        tint = if (companionState == CompanionState.LISTENING) TendrilsPalette.Indigo400 else TendrilsTheme.colors.textMuted
+                    RealMicrophoneIcon(
+                        isRecording = isRecording,
+                        tint = if (isRecording) TendrilsPalette.Indigo400 else TendrilsTheme.colors.primary
                     )
                 }
+
+                Spacer(modifier = Modifier.width(4.dp))
 
                 // Send Button
                 Box(
@@ -427,6 +465,189 @@ fun HomeScreen() {
                 }
             }
         }
+    }
+
+    // Conversation History & Companion Memory Dialog
+    if (showHistoryDialog) {
+        AlertDialog(
+            onDismissRequest = { showHistoryDialog = false },
+            title = {
+                Text(
+                    text = "History & Companion Memory",
+                    style = TendrilsTheme.typography.h3,
+                    color = TendrilsTheme.colors.textPrimary
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    // Active Memory Context Card
+                    TendrilsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        backgroundColor = TendrilsTheme.colors.primary.copy(alpha = 0.12f),
+                        borderColor = TendrilsTheme.colors.primary,
+                        padding = 12.dp
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(
+                                text = "Active Memory Topic",
+                                style = TendrilsTheme.typography.caption,
+                                fontWeight = FontWeight.Bold,
+                                color = TendrilsTheme.colors.primary
+                            )
+                            Text(
+                                text = ConversationMemory.activeSubjectTitle,
+                                style = TendrilsTheme.typography.body1,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TendrilsTheme.colors.textPrimary
+                            )
+                            Text(
+                                text = "${ConversationMemory.turns.size} turns remembered in context • Step ${ConversationMemory.continuationStep}",
+                                style = TendrilsTheme.typography.caption,
+                                color = TendrilsTheme.colors.textSecondary
+                            )
+                            if (ConversationMemory.turns.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Button(
+                                        onClick = {
+                                            showHistoryDialog = false
+                                            onSendMessage("Continue")
+                                        },
+                                        shape = PillShape,
+                                        colors = ButtonDefaults.buttonColors(
+                                            backgroundColor = TendrilsTheme.colors.primary,
+                                            contentColor = Color.White
+                                        ),
+                                        modifier = Modifier.weight(1f).height(34.dp),
+                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                                    ) {
+                                        Text("Continue Topic", fontSize = 11.sp)
+                                    }
+                                    OutlinedButton(
+                                        onClick = {
+                                            showHistoryDialog = false
+                                            onSendMessage("Give me a real-world example")
+                                        },
+                                        shape = PillShape,
+                                        modifier = Modifier.weight(1f).height(34.dp),
+                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                                    ) {
+                                        Text("Real Example", fontSize = 11.sp, color = TendrilsTheme.colors.primary)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Recent Memory Turns
+                    if (ConversationMemory.turns.isNotEmpty()) {
+                        Text(
+                            text = "Recent Remembered Prompts",
+                            style = TendrilsTheme.typography.caption,
+                            fontWeight = FontWeight.Bold,
+                            color = TendrilsTheme.colors.textSecondary
+                        )
+                        ConversationMemory.turns.takeLast(3).reversed().forEach { turn ->
+                            TendrilsCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                backgroundColor = TendrilsTheme.colors.surfaceElevated,
+                                padding = 8.dp,
+                                onClick = {
+                                    showHistoryDialog = false
+                                    onSendMessage("Continue explaining ${turn.subjectTitle}")
+                                }
+                            ) {
+                                Column {
+                                    Text(
+                                        text = turn.subjectTitle,
+                                        style = TendrilsTheme.typography.caption,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TendrilsTheme.colors.primary
+                                    )
+                                    Text(
+                                        text = "Q: ${turn.userQuery}",
+                                        style = TendrilsTheme.typography.caption,
+                                        color = TendrilsTheme.colors.textPrimary
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Saved Chat Sessions
+                    if (ConversationMemory.savedSessions.isNotEmpty()) {
+                        Text(
+                            text = "Saved Chat Sessions",
+                            style = TendrilsTheme.typography.caption,
+                            fontWeight = FontWeight.Bold,
+                            color = TendrilsTheme.colors.textSecondary
+                        )
+                        ConversationMemory.savedSessions.take(3).forEach { session ->
+                            TendrilsCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                backgroundColor = TendrilsTheme.colors.surfaceElevated,
+                                padding = 8.dp,
+                                onClick = {
+                                    messages = session.messages
+                                    ConversationMemory.activeSubjectTitle = session.summaryTopic
+                                    showHistoryDialog = false
+                                }
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = session.title,
+                                            style = TendrilsTheme.typography.body2,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = TendrilsTheme.colors.textPrimary
+                                        )
+                                        Text(
+                                            text = "${session.summaryTopic} • ${session.turnCount} messages",
+                                            style = TendrilsTheme.typography.caption,
+                                            color = TendrilsTheme.colors.textMuted
+                                        )
+                                    }
+                                    Text(
+                                        text = "Restore",
+                                        style = TendrilsTheme.typography.caption,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TendrilsTheme.colors.primary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            buttons = {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    TextButton(
+                        onClick = {
+                            ConversationMemory.archiveSession(messages)
+                            ConversationMemory.clearActiveMemory()
+                            messages = listOf(initialWelcomeMessage)
+                            showHistoryDialog = false
+                        }
+                    ) {
+                        Text("Save & New Chat", color = TendrilsTheme.colors.primary, fontWeight = FontWeight.Bold)
+                    }
+                    TextButton(onClick = { showHistoryDialog = false }) {
+                        Text("Close", color = TendrilsTheme.colors.textMuted)
+                    }
+                }
+            },
+            backgroundColor = TendrilsTheme.colors.surface,
+            shape = TendrilsTheme.shapes.medium
+        )
     }
 
     // Attachment Modal Dialog
@@ -519,6 +740,78 @@ fun HomeScreen() {
     }
 }
 
+/**
+ * Custom vector-drawn Real Microphone & Talk Wave Icon.
+ * Displays a crisp capsule microphone with cradle, stand, and live voice waves when recording.
+ */
+@Composable
+private fun RealMicrophoneIcon(
+    isRecording: Boolean,
+    tint: Color
+) {
+    Canvas(modifier = Modifier.size(22.dp)) {
+        val w = size.width
+        val h = size.height
+        val cx = w / 2f
+
+        // 1. Microphone Capsule (Rounded vertical pill at top center)
+        val capW = w * 0.30f
+        val capH = h * 0.48f
+        drawRoundRect(
+            color = tint,
+            topLeft = Offset(cx - capW / 2f, h * 0.08f),
+            size = Size(capW, capH),
+            cornerRadius = CornerRadius(capW / 2f, capW / 2f)
+        )
+
+        // 2. U-Shaped Microphone Cradle
+        val cradlePath = Path().apply {
+            moveTo(cx - w * 0.26f, h * 0.36f)
+            quadraticBezierTo(cx - w * 0.26f, h * 0.72f, cx, h * 0.72f)
+            quadraticBezierTo(cx + w * 0.26f, h * 0.72f, cx + w * 0.26f, h * 0.36f)
+        }
+        drawPath(
+            path = cradlePath,
+            color = tint,
+            style = Stroke(width = 2.2f, cap = StrokeCap.Round)
+        )
+
+        // 3. Vertical Stem & Base Stand
+        drawLine(
+            color = tint,
+            start = Offset(cx, h * 0.72f),
+            end = Offset(cx, h * 0.90f),
+            strokeWidth = 2.2f,
+            cap = StrokeCap.Round
+        )
+        drawLine(
+            color = tint,
+            start = Offset(cx - w * 0.18f, h * 0.90f),
+            end = Offset(cx + w * 0.18f, h * 0.90f),
+            strokeWidth = 2.2f,
+            cap = StrokeCap.Round
+        )
+
+        // 4. Live Talk Sound Waves on left and right when actively listening
+        if (isRecording) {
+            drawLine(
+                color = tint,
+                start = Offset(w * 0.08f, h * 0.24f),
+                end = Offset(w * 0.08f, h * 0.48f),
+                strokeWidth = 2.0f,
+                cap = StrokeCap.Round
+            )
+            drawLine(
+                color = tint,
+                start = Offset(w * 0.92f, h * 0.24f),
+                end = Offset(w * 0.92f, h * 0.48f),
+                strokeWidth = 2.0f,
+                cap = StrokeCap.Round
+            )
+        }
+    }
+}
+
 @Composable
 private fun AttachmentOption(
     title: String,
@@ -550,11 +843,11 @@ private fun generateCompanionResponse(query: String): String {
 private fun generateFollowUps(query: String): List<String> {
     val q = query.lowercase()
     return when {
-        q.contains("search engine") -> listOf("How do web crawlers work?", "How do I spot a fake online link?", "What is PageRank?")
-        q.contains("link") || q.contains("fake") || q.contains("scam") || q.contains("phish") -> listOf("How does HTTPS work?", "What should I do if I clicked a scam link?", "How can I spot a deepfake image?")
-        q.contains("study") || q.contains("schedule") || q.contains("learn") -> listOf("How does spaced repetition work?", "How do search engines work?", "Explain gravity and black holes")
-        q.contains("space") || q.contains("gravity") || q.contains("black hole") -> listOf("What is an event horizon?", "How does solar energy work?", "How do rockets escape Earth?")
-        q.contains("photosynthesis") || q.contains("chlorophyll") -> listOf("Why are leaves green?", "How do plant cells differ from animal cells?")
-        else -> listOf("Explain this in simpler terms", "Give me a real-world example", "How do I spot a fake online link?")
+        q.contains("search engine") || q.contains("crawler") -> listOf("Continue", "How do web crawlers work?", "Give me a real-world example")
+        q.contains("link") || q.contains("fake") || q.contains("scam") || q.contains("phish") -> listOf("Continue", "How does HTTPS work?", "What should I do if I clicked a scam link?")
+        q.contains("study") || q.contains("schedule") || q.contains("learn") -> listOf("Continue", "How does spaced repetition work?", "Give me a real-world example")
+        q.contains("space") || q.contains("gravity") || q.contains("black hole") -> listOf("Continue", "What is an event horizon?", "Explain this in simpler terms")
+        q.contains("photosynthesis") || q.contains("chlorophyll") -> listOf("Continue", "Explain this in simpler terms", "Give me a real-world example")
+        else -> listOf("Continue", "Explain this in simpler terms", "Give me a real-world example")
     }
 }

@@ -1,7 +1,5 @@
 package com.truthlens.ui.chat
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -9,29 +7,31 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.truthlens.ui.components.AvatarManager
+import com.truthlens.ui.components.TendrilOrganism
 import com.truthlens.ui.components.TendrilsCard
 import com.truthlens.ui.model.ChatMessage
+import com.truthlens.ui.model.CompanionState
 import com.truthlens.ui.theme.PillShape
 import com.truthlens.ui.theme.TendrilsPalette
-import com.truthlens.ui.theme.TendrilsShapes
 import com.truthlens.ui.theme.TendrilsTheme
 
 /**
  * Rich Chat Message Bubble supporting:
- * - Text
+ * - Clean Bold & Inline formatting (strips all raw *, **, ***** artifacts)
  * - Headings
- * - Lists / bullet points
- * - Links
+ * - Bullet & Numbered Lists
  * - Follow-up suggestions
  */
 @Composable
@@ -48,7 +48,6 @@ fun TendrilsMessageBubble(
         contentAlignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
     ) {
         if (isUser) {
-            // User Message Bubble
             Box(
                 modifier = Modifier
                     .widthIn(max = 280.dp)
@@ -70,26 +69,24 @@ fun TendrilsMessageBubble(
                 )
             }
         } else {
-            // Assistant Message Bubble with Avatar & Rich Formatted Layout
             Row(
-                modifier = Modifier
-                    .fillMaxWidth(0.92f),
+                modifier = Modifier.fillMaxWidth(0.94f),
                 verticalAlignment = Alignment.Top
             ) {
-                // Tendrils Avatar Badge
+                // Selected Companion Avatar Badge
                 Box(
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(34.dp)
                         .clip(CircleShape)
-                        .background(TendrilsTheme.colors.primary.copy(alpha = 0.15f))
+                        .background(TendrilsTheme.colors.primary.copy(alpha = 0.14f))
                         .border(1.dp, TendrilsTheme.colors.primary.copy(alpha = 0.5f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Favorite,
-                        contentDescription = "Tendrils",
-                        tint = TendrilsTheme.colors.primary,
-                        modifier = Modifier.size(16.dp)
+                    TendrilOrganism(
+                        state = CompanionState.IDLE,
+                        size = 28.dp,
+                        archetype = AvatarManager.selectedArchetype,
+                        interactiveOnTap = false
                     )
                 }
 
@@ -111,7 +108,6 @@ fun TendrilsMessageBubble(
                         FormattedResponseText(content = message.content)
                     }
 
-                    // Follow-Up Suggestions
                     if (message.followUps.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -125,7 +121,7 @@ fun TendrilsMessageBubble(
                                         .padding(horizontal = 12.dp, vertical = 6.dp)
                                 ) {
                                     Text(
-                                        text = "→ $followUp",
+                                        text = "→ ${cleanAsterisks(followUp)}",
                                         style = TendrilsTheme.typography.caption,
                                         fontWeight = FontWeight.SemiBold,
                                         color = TendrilsTheme.colors.primary
@@ -141,18 +137,49 @@ fun TendrilsMessageBubble(
 }
 
 /**
- * Parses markdown-like headers (`#`), bullet lists (`- `, `•`), and plain text.
+ * Strips raw ***** / *** / ** markdown artifacts and converts **bold** segments into styled AnnotatedString spans.
  */
+fun parseCleanAnnotatedLine(rawLine: String): AnnotatedString {
+    // First remove runs of 3 or more asterisks (e.g., ***, ****, *****) completely
+    val preCleaned = rawLine
+        .replace(Regex("\\*{3,}"), "")
+        .replace(Regex("^\\*+\\s*"), "")
+        .replace(Regex("\\s*\\*+$"), "")
+
+    return buildAnnotatedString {
+        val parts = preCleaned.split("**")
+        parts.forEachIndexed { index, part ->
+            val segment = part.replace("*", "").replace("`", "")
+            if (index % 2 == 1) {
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                    append(segment)
+                }
+            } else {
+                append(segment)
+            }
+        }
+    }
+}
+
+private fun cleanAsterisks(raw: String): String {
+    return raw.replace(Regex("\\*+"), "").replace("`", "").trim()
+}
+
 @Composable
 private fun FormattedResponseText(content: String) {
     val lines = content.lines()
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        for (line in lines) {
+        for (rawLine in lines) {
+            val line = rawLine.trim()
+            if (line.matches(Regex("^[\\*\\-_]{3,}$"))) {
+                // Skip horizontal markdown divider lines like ***** or ---
+                continue
+            }
             when {
                 line.startsWith("# ") -> {
                     Text(
-                        text = line.removePrefix("# "),
+                        text = cleanAsterisks(line.removePrefix("# ")),
                         style = TendrilsTheme.typography.h3,
                         color = TendrilsTheme.colors.textPrimary,
                         modifier = Modifier.padding(top = 4.dp, bottom = 2.dp)
@@ -160,10 +187,19 @@ private fun FormattedResponseText(content: String) {
                 }
                 line.startsWith("## ") -> {
                     Text(
-                        text = line.removePrefix("## "),
+                        text = cleanAsterisks(line.removePrefix("## ")),
                         style = TendrilsTheme.typography.subtitle1,
                         fontWeight = FontWeight.Bold,
                         color = TendrilsTheme.colors.textPrimary,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                }
+                line.startsWith("### ") -> {
+                    Text(
+                        text = cleanAsterisks(line.removePrefix("### ")),
+                        style = TendrilsTheme.typography.body1,
+                        fontWeight = FontWeight.Bold,
+                        color = TendrilsTheme.colors.primary,
                         modifier = Modifier.padding(top = 2.dp)
                     )
                 }
@@ -179,7 +215,7 @@ private fun FormattedResponseText(content: String) {
                             modifier = Modifier.padding(end = 8.dp)
                         )
                         Text(
-                            text = line.substring(2),
+                            text = parseCleanAnnotatedLine(line.substring(2)),
                             style = TendrilsTheme.typography.body1,
                             color = TendrilsTheme.colors.textPrimary
                         )
@@ -187,7 +223,7 @@ private fun FormattedResponseText(content: String) {
                 }
                 line.isNotBlank() -> {
                     Text(
-                        text = line,
+                        text = parseCleanAnnotatedLine(line),
                         style = TendrilsTheme.typography.body1,
                         color = TendrilsTheme.colors.textPrimary
                     )
@@ -200,9 +236,6 @@ private fun FormattedResponseText(content: String) {
     }
 }
 
-/**
- * Thinking indicator displayed when Tendrils is processing a query.
- */
 @Composable
 fun ThinkingIndicator() {
     Row(
@@ -218,11 +251,11 @@ fun ThinkingIndicator() {
                 .background(TendrilsPalette.Violet400.copy(alpha = 0.15f)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Default.Favorite,
-                contentDescription = null,
-                tint = TendrilsPalette.Violet400,
-                modifier = Modifier.size(16.dp)
+            TendrilOrganism(
+                state = CompanionState.THINKING,
+                size = 26.dp,
+                archetype = AvatarManager.selectedArchetype,
+                interactiveOnTap = false
             )
         }
 
