@@ -98,12 +98,23 @@ fun FlowCLearningDialog(
     onDismiss: () -> Unit,
     onSendToChat: ((String) -> Unit)? = null
 ) {
-    var selectedSubject by remember { mutableStateOf("Photosynthesis & Plant Biology") }
+    var selectedSubject by remember { mutableStateOf("Digital Media Authenticity") }
     var selectedDepth by remember { mutableStateOf("Intermediate") }
-    var userQuestion by remember { mutableStateOf("How do leaves convert sunlight into plant energy?") }
+    var userQuestion by remember { mutableStateOf("How can I tell if an image or video is AI-generated?") }
     var isGenerating by remember { mutableStateOf(false) }
     var explanationResult by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
+
+    val selectSubject: (String) -> Unit = { subject ->
+        selectedSubject = subject
+        explanationResult = null
+        userQuestion = when {
+            subject.contains("Digital Media") -> "How can I tell if an image or video is AI-generated?"
+            subject.contains("Algorithms") -> "How do sorting and search algorithms solve problems fast?"
+            subject.contains("Space") -> "What happens near the event horizon of a black hole?"
+            else -> "How do leaves convert sunlight into plant energy?"
+        }
+    }
 
     FlowModalDialog(
         title = "Learning Hub (Flow C)",
@@ -111,7 +122,7 @@ fun FlowCLearningDialog(
         icon = Icons.Default.Info,
         onDismiss = onDismiss
     ) {
-        val subjects = listOf("Photosynthesis & Plant Biology", "Digital Media Authenticity", "Basics of Algorithms", "Space & Black Holes")
+        val subjects = listOf("Digital Media Authenticity", "Basics of Algorithms", "Space & Black Holes", "Photosynthesis & Plant Biology")
         Text("1. Choose a Subject", style = TendrilsTheme.typography.subtitle1, fontWeight = FontWeight.SemiBold, color = TendrilsTheme.colors.textPrimary)
 
         subjects.forEach { subject ->
@@ -121,10 +132,10 @@ fun FlowCLearningDialog(
                 backgroundColor = if (isSel) TendrilsTheme.colors.primary.copy(alpha = 0.14f) else TendrilsTheme.colors.surfaceElevated,
                 borderColor = if (isSel) TendrilsTheme.colors.primary else TendrilsTheme.colors.border,
                 padding = 8.dp,
-                onClick = { selectedSubject = subject }
+                onClick = { selectSubject(subject) }
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(selected = isSel, onClick = { selectedSubject = subject }, colors = RadioButtonDefaults.colors(selectedColor = TendrilsTheme.colors.primary))
+                    RadioButton(selected = isSel, onClick = { selectSubject(subject) }, colors = RadioButtonDefaults.colors(selectedColor = TendrilsTheme.colors.primary))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(subject, style = TendrilsTheme.typography.body2, color = TendrilsTheme.colors.textPrimary)
                 }
@@ -161,13 +172,13 @@ fun FlowCLearningDialog(
             onClick = {
                 scope.launch {
                     isGenerating = true
-                    delay(900)
+                    delay(220)
                     isGenerating = false
-                    explanationResult = when (selectedDepth) {
-                        "Simple" -> "Plants act like tiny green solar panels! Their leaves catch sunlight with green chlorophyll and mix it with water from roots to make food and sweet fresh air for us to breathe."
-                        "Intermediate" -> "Photosynthesis occurs inside plant chloroplasts. Chlorophyll molecules capture photons, splitting water (H₂O) into oxygen (O₂) and using carbon dioxide (CO₂) to build glucose for plant tissue."
-                        else -> "In the thylakoid membrane, photon absorption drives Photosystems II and I, generating ATP and NADPH via electron transport chains. The Calvin Cycle in the stroma fixes CO₂ through the RuBisCO enzyme into glyceraldehyde-3-phosphate."
-                    }
+                    explanationResult = com.truthlens.llm.LlamatikEngine.generateSubjectExplanation(
+                        subject = selectedSubject,
+                        question = userQuestion,
+                        depth = selectedDepth
+                    )
                 }
             },
             modifier = Modifier.fillMaxWidth().height(48.dp),
@@ -663,7 +674,7 @@ fun FlowVisionDialog(
     onDismiss: () -> Unit,
     onSendToChat: ((String) -> Unit)? = null
 ) {
-    var selectedSubject by remember { mutableStateOf("plant_chloroplast.jpg (Botanical Sample)") }
+    var selectedSubject by remember { mutableStateOf("portrait_photo.jpg (Portrait Photo & Lighting)") }
     var isAnalyzing by remember { mutableStateOf(false) }
     var visionResult by remember { mutableStateOf<VisionAnalysisResult?>(null) }
     val scope = rememberCoroutineScope()
@@ -677,10 +688,10 @@ fun FlowVisionDialog(
         Text("1. Visual Input Source", style = TendrilsTheme.typography.subtitle1, fontWeight = FontWeight.SemiBold, color = TendrilsTheme.colors.textPrimary)
 
         listOf(
-            "plant_chloroplast.jpg (Botanical Biology Diagram)",
-            "document_energy.png (Physics Textbook Page)",
             "portrait_photo.jpg (Portrait Photo & Lighting)",
-            "custom_scan.jpg (Live Camera Viewfinder Snapshot)"
+            "document_energy.png (Physics Textbook Page)",
+            "custom_scan.jpg (Live Camera Viewfinder Snapshot)",
+            "plant_chloroplast.jpg (Botanical Biology Diagram)"
         ).forEach { subject ->
             val isSel = selectedSubject == subject
             TendrilsCard(

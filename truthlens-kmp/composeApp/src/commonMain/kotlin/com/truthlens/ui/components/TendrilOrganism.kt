@@ -25,18 +25,15 @@ import com.truthlens.ui.model.CompanionState
 import kotlin.math.*
 
 enum class TendrilStyle {
-    FIDDLEHEAD_COIL,     // Curled spiral fern fiddleheads on crown + rosy cheek foliage
-    SPIRAL_ANTENNAE,      // Twin delicate coiled twining vines with active antennae reach
-    WEEPING_WILLOW,       // Cascading sweeping willow curls draping down both sides like a cape
-    STARBURST_TENDRILS,   // 5 radiating bouncy starburst vine shoots
-    GINKGO_CANOPY         // Wide tiered fan fronds layered like an ancient bonsai umbrella
+    RADIAL_CLASSIC,      // 5 bold flowing radial curling tendrils with bud tips
+    SPIRAL_FERN,         // Twin high-curling spiral tendrils + nimble side wisps
+    CASCADING_WILLOW,    // Sweeping canopy tendrils cascading down both sides with leaf beads
+    STARBURST_WHIP,      // 8-point energetic radiating tendrils with golden tips
+    HALO_CROWN           // Intertwined looping tendril arcs with twin base leaflets
 }
 
 enum class AvatarArchetype(
     val id: String,
-    val displayName: String,
-    val description: String,
-    val tag: String,
     val bodyWidthScale: Float,
     val bodyHeightScale: Float,
     val armLengthScale: Float,
@@ -45,117 +42,94 @@ enum class AvatarArchetype(
     val legThicknessScale: Float,
     val tendrilStyle: TendrilStyle
 ) {
-    CHUBBY_SPROUT(
-        id = "chubby",
-        displayName = "Puff-Sprout",
-        description = "Chubby, roly-poly dumpling sprout with curled fiddlehead coils and stubby paws",
-        tag = "Chubby",
-        bodyWidthScale = 1.30f,
-        bodyHeightScale = 0.88f,
-        armLengthScale = 0.70f,
+    AVATAR_1(
+        id = "avatar_1",
+        bodyWidthScale = 1.32f,
+        bodyHeightScale = 0.86f,
+        armLengthScale = 0.72f,
         armThicknessScale = 1.35f,
-        legLengthScale = 0.55f,
+        legLengthScale = 0.60f,
         legThicknessScale = 1.40f,
-        tendrilStyle = TendrilStyle.FIDDLEHEAD_COIL
+        tendrilStyle = TendrilStyle.RADIAL_CLASSIC
     ),
-    SKINNY_TWIGLET(
-        id = "skinny",
-        displayName = "Vine-Wisp",
-        description = "Slender, nimble, agile silhouette with long flexible twining vine arms and spiral fern antennae",
-        tag = "Skinny",
-        bodyWidthScale = 0.68f,
-        bodyHeightScale = 1.05f,
-        armLengthScale = 1.35f,
-        armThicknessScale = 0.70f,
-        legLengthScale = 1.15f,
+    AVATAR_2(
+        id = "avatar_2",
+        bodyWidthScale = 0.66f,
+        bodyHeightScale = 1.06f,
+        armLengthScale = 1.18f,
+        armThicknessScale = 0.72f,
+        legLengthScale = 1.12f,
         legThicknessScale = 0.75f,
-        tendrilStyle = TendrilStyle.SPIRAL_ANTENNAE
+        tendrilStyle = TendrilStyle.SPIRAL_FERN
     ),
-    TALL_WILLOW(
-        id = "tall",
-        displayName = "Arbor-Elder",
-        description = "Stately elongated bough torso with cascading weeping willow tendrils draping like a leafy cloak",
-        tag = "Tall",
+    AVATAR_3(
+        id = "avatar_3",
         bodyWidthScale = 0.82f,
-        bodyHeightScale = 1.45f,
-        armLengthScale = 1.30f,
+        bodyHeightScale = 1.38f,
+        armLengthScale = 1.25f,
         armThicknessScale = 0.95f,
-        legLengthScale = 1.40f,
+        legLengthScale = 1.38f,
         legThicknessScale = 1.00f,
-        tendrilStyle = TendrilStyle.WEEPING_WILLOW
+        tendrilStyle = TendrilStyle.CASCADING_WILLOW
     ),
-    LONG_STRIDER(
-        id = "strider",
-        displayName = "Branch-Strider",
-        description = "Extra-long elastic leafy arms and springy stilt legs that climb, hang, and lean playfully",
-        tag = "Long Limbs",
-        bodyWidthScale = 0.88f,
-        bodyHeightScale = 0.92f,
-        armLengthScale = 1.80f,
-        armThicknessScale = 0.85f,
-        legLengthScale = 1.85f,
-        legThicknessScale = 0.85f,
-        tendrilStyle = TendrilStyle.STARBURST_TENDRILS
+    AVATAR_4(
+        id = "avatar_4",
+        bodyWidthScale = 0.86f,
+        bodyHeightScale = 0.88f,
+        armLengthScale = 1.78f,
+        armThicknessScale = 0.88f,
+        legLengthScale = 1.78f,
+        legThicknessScale = 0.88f,
+        tendrilStyle = TendrilStyle.STARBURST_WHIP
     ),
-    GINKGO_SAGE(
-        id = "sage",
-        displayName = "Bonsai-Sage",
-        description = "Broad grounded rooted stance with multi-tiered scalloped Ginkgo biloba frond umbrella crown",
-        tag = "Bonsai Sage",
-        bodyWidthScale = 1.12f,
-        bodyHeightScale = 1.05f,
+    AVATAR_5(
+        id = "avatar_5",
+        bodyWidthScale = 1.14f,
+        bodyHeightScale = 1.02f,
         armLengthScale = 1.05f,
-        armThicknessScale = 1.15f,
-        legLengthScale = 0.90f,
-        legThicknessScale = 1.25f,
-        tendrilStyle = TendrilStyle.GINKGO_CANOPY
+        armThicknessScale = 1.18f,
+        legLengthScale = 0.92f,
+        legThicknessScale = 1.22f,
+        tendrilStyle = TendrilStyle.HALO_CROWN
     );
 
     companion object {
-        fun byId(id: String): AvatarArchetype = entries.firstOrNull { it.id == id } ?: CHUBBY_SPROUT
+        fun byId(id: String): AvatarArchetype = entries.firstOrNull { it.id == id } ?: AVATAR_1
     }
 }
 
 object AvatarManager {
-    var selectedArchetype by mutableStateOf(AvatarArchetype.CHUBBY_SPROUT)
-    fun cycleNext() {
-        val nextIdx = (selectedArchetype.ordinal + 1) % AvatarArchetype.entries.size
-        selectedArchetype = AvatarArchetype.entries[nextIdx]
-    }
+    var selectedArchetype by mutableStateOf(AvatarArchetype.AVATAR_1)
 }
 
 /**
- * TendrilOrganism — 5 Customizable Botanical Avatar Archetypes:
- * 1. Chubby Sprout (Dumpling body, roly-poly, stubby root paws, fiddlehead coils)
- * 2. Skinny Twiglet (Slender, agile whip arms, twin spiral fern antennae)
- * 3. Tall Willow (Stately elongated torso, cascading weeping willow leafy hair/cloak)
- * 4. Long-Limbed Strider (Extra-long elastic leafy arms & springy stilt legs, hanging & climbing)
- * 5. Bonsai Sage (Broad rooted bonsai stance, wide Ginkgo leaf fan hands, tiered umbrella fronds)
+ * TendrilOrganism — Iconic Upright Botanical Leaf Companion with Child-like Arms, Legs & Flowing Tendrils.
+ * Keeps the tender glowing leaf aesthetic with bold strokes, expressive face on the leaf blade,
+ * hand gestures while speaking, wall-leaning pose, tree-branch hanging, and celebration burst.
  */
 @Composable
 fun TendrilOrganism(
     state: CompanionState,
     modifier: Modifier = Modifier,
     size: Dp = 140.dp,
-    archetype: AvatarArchetype = AvatarManager.selectedArchetype
+    archetype: AvatarArchetype = AvatarManager.selectedArchetype,
+    interactiveOnTap: Boolean = true
 ) {
-    var isInteractiveTapped by remember { mutableStateOf(false) }
-    var tapCounter by remember { mutableStateOf(0) }
+    var tapActionIndex by remember { mutableStateOf(0) }
 
     val infiniteTransition = rememberInfiniteTransition()
 
-    // Smooth continuous phase for breathing, arm waving, and tendrils
     val animPhase by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = (2 * PI).toFloat(),
         animationSpec = infiniteRepeatable(
             animation = tween(
                 durationMillis = when (state) {
-                    CompanionState.SPEAKING -> 1800
-                    CompanionState.THINKING -> 2400
-                    CompanionState.LISTENING -> 2000
-                    CompanionState.COMPLETED -> 1400
-                    else -> 3000
+                    CompanionState.SPEAKING -> 1700
+                    CompanionState.THINKING -> 2300
+                    CompanionState.LISTENING -> 1900
+                    CompanionState.COMPLETED -> 1300
+                    else -> 2800
                 },
                 easing = LinearEasing
             ),
@@ -163,39 +137,38 @@ fun TendrilOrganism(
         )
     )
 
-    // Gentle breathing pulse
     val breathScale by infiniteTransition.animateFloat(
-        initialValue = 0.97f,
-        targetValue = 1.03f,
+        initialValue = 0.96f,
+        targetValue = 1.04f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1400, easing = FastOutSlowInEasing),
+            animation = tween(1350, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         )
     )
 
-    // Natural eye blink timer
     val blinkProgress by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
             animation = keyframes {
-                durationMillis = 3500
+                durationMillis = 3600
                 0.0f at 0
-                0.0f at 3200
-                1.0f at 3350
-                0.0f at 3500
+                0.0f at 3300
+                1.0f at 3450
+                0.0f at 3600
             },
             repeatMode = RepeatMode.Restart
         )
     )
 
-    // Cute bouncy hopping
-    val isHopping = state == CompanionState.COMPLETED ||
-            state == CompanionState.SPEAKING ||
-            isInteractiveTapped
+    // Interactive modes triggered by state or tapping the organism on the Chat screen:
+    // tapActionIndex: 0 = normal/leaning, 1 = jumping/hopping, 2 = hanging on tree branch, 3 = celebration burst
+    val isHanging = state == CompanionState.PERFORMING_TASK || (interactiveOnTap && tapActionIndex == 2)
+    val isCelebrating = state == CompanionState.COMPLETED || (interactiveOnTap && tapActionIndex == 3)
+    val isHopping = isCelebrating || state == CompanionState.SPEAKING || (interactiveOnTap && tapActionIndex == 1)
 
-    val hopOffset = if (isHopping) {
-        abs(sin(animPhase * 2f)) * 10f
+    val hopOffset = if (isHopping && !isHanging) {
+        abs(sin(animPhase * 2f)) * 9f
     } else {
         sin(animPhase) * 2f
     }
@@ -204,27 +177,29 @@ fun TendrilOrganism(
     val auraColor by animateColorAsState(targetValue = state.auraColor, animationSpec = tween(400))
 
     Box(
-        modifier = modifier
-            .size(size)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) {
-                tapCounter++
-                isInteractiveTapped = !isInteractiveTapped
-                AvatarManager.cycleNext()
-            },
+        modifier = if (interactiveOnTap) {
+            modifier
+                .size(size)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) {
+                    tapActionIndex = (tapActionIndex + 1) % 4
+                }
+        } else {
+            modifier.size(size)
+        },
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.size(size)) {
-            val center = Offset(this.size.width / 2f, (this.size.height / 2f) - hopOffset)
+            val center = Offset(this.size.width / 2f, (this.size.height / 2f) - hopOffset * 0.6f)
             val baseRadius = this.size.minDimension / 2f
 
-            // 1. Soft Bioluminescent Radial Aura
+            // 1. Soft Ambient Bioluminescent Aura
             drawCircle(
                 brush = Brush.radialGradient(
                     colors = listOf(
-                        auraColor.copy(alpha = 0.40f),
+                        auraColor.copy(alpha = 0.42f),
                         auraColor.copy(alpha = 0.10f),
                         Color.Transparent
                     ),
@@ -235,19 +210,27 @@ fun TendrilOrganism(
                 center = center
             )
 
-            // 2. Celebration Sparkle Burst
-            if (state == CompanionState.COMPLETED || (tapCounter % 3 == 0 && tapCounter > 0)) {
+            // 2. Celebration Burst Particles
+            if (isCelebrating) {
                 drawCelebrationBurst(
                     center = center,
-                    radius = baseRadius * 0.9f,
+                    radius = baseRadius * 0.92f,
                     phase = animPhase,
                     color = primaryColor
                 )
             }
 
-            // 3. Overhead Tree Branch (companion can hang playfully)
-            val showBranch = state == CompanionState.COMPLETED || tapCounter % 2 == 1
-            if (showBranch) {
+            // 3. Flowing Tendrils (Unique per Avatar Archetype, bold and tender)
+            drawArchetypeTendrils(
+                center = center,
+                baseRadius = baseRadius * 0.44f,
+                phase = animPhase,
+                color = primaryColor,
+                archetype = archetype
+            )
+
+            // 4. Overhead Sprouted Tree Branch (when hanging)
+            if (isHanging) {
                 drawOverheadTreeBranch(
                     center = center,
                     radius = baseRadius,
@@ -256,57 +239,39 @@ fun TendrilOrganism(
                 )
             }
 
-            // 4. Legs / Rootlet Paws (Styled per Archetype)
-            drawCustomPaws(
+            // 5. Child-like Legs & Feet (Jumping, walking, or kicking when hanging)
+            drawLeafChildLegs(
                 center = center,
                 radius = baseRadius,
                 phase = animPhase,
                 color = primaryColor,
                 isHopping = isHopping,
-                isHanging = showBranch,
+                isHanging = isHanging,
                 archetype = archetype
             )
 
-            // 5. Body (Styled per Archetype)
-            drawCustomBody(
+            // 6. Iconic Upright Botanical Leaf Body & Friendly Leaf Face
+            drawUprightLeafBodyAndFace(
                 center = center,
                 radius = baseRadius,
-                color = primaryColor,
-                auraColor = auraColor,
+                phase = animPhase,
                 breathScale = breathScale,
-                archetype = archetype
-            )
-
-            // 6. Scalloped Leaf-Mask Face with Big Friendly Anime Eyes & Smile
-            drawScallopedLeafFace(
-                center = center,
-                radius = baseRadius,
-                phase = animPhase,
-                state = state,
-                color = primaryColor,
-                auraColor = auraColor,
                 blinkProgress = blinkProgress,
+                state = state,
+                isCelebrating = isCelebrating,
+                color = primaryColor,
                 archetype = archetype
             )
 
-            // 7. Arms & Leaf Hands (Styled per Archetype)
-            drawCustomArms(
+            // 7. Child-like Arms & Leaf Hands (Explaining with hands, leaning on wall, or hanging)
+            drawLeafChildArms(
                 center = center,
                 radius = baseRadius,
                 phase = animPhase,
                 state = state,
                 color = primaryColor,
-                isHanging = showBranch,
-                archetype = archetype
-            )
-
-            // 8. Crown Sprout & Distinct Tendrils
-            drawCustomCrownSproutAndTendrils(
-                center = center,
-                radius = baseRadius,
-                phase = animPhase,
-                state = state,
-                color = primaryColor,
+                isHanging = isHanging,
+                isCelebrating = isCelebrating,
                 archetype = archetype
             )
         }
@@ -314,342 +279,557 @@ fun TendrilOrganism(
 }
 
 /**
- * 1. Morphological Body Drawing per Archetype
+ * Draws the iconic upright pointed botanical leaf (from the original Tendrils icon spec)
+ * with bold tender gradient fill, central midrib vein, lateral veins, and a warm friendly face.
  */
-private fun DrawScope.drawCustomBody(
-    center: Offset,
-    radius: Float,
-    color: Color,
-    auraColor: Color,
-    breathScale: Float,
-    archetype: AvatarArchetype
-) {
-    val bodyW = radius * 0.78f * breathScale * archetype.bodyWidthScale
-    val bodyH = radius * 0.80f * breathScale * archetype.bodyHeightScale
-    val bodyCenter = Offset(center.x, center.y + (radius * 0.04f * archetype.bodyHeightScale))
-
-    val bodyPath = Path().apply {
-        addOval(
-            androidx.compose.ui.geometry.Rect(
-                left = bodyCenter.x - bodyW * 0.5f,
-                top = bodyCenter.y - bodyH * 0.5f,
-                right = bodyCenter.x + bodyW * 0.5f,
-                bottom = bodyCenter.y + bodyH * 0.5f
-            )
-        )
-    }
-
-    drawPath(
-        path = bodyPath,
-        brush = Brush.radialGradient(
-            colors = listOf(
-                color.copy(alpha = 0.24f),
-                color.copy(alpha = 0.12f),
-                auraColor.copy(alpha = 0.05f)
-            ),
-            center = bodyCenter,
-            radius = bodyW * 0.6f
-        )
-    )
-
-    drawPath(
-        path = bodyPath,
-        color = color.copy(alpha = 0.80f),
-        style = Stroke(width = 3.2f, cap = StrokeCap.Round)
-    )
-}
-
-/**
- * 2. Scalloped Leaf-Mask Face with Big Friendly Anime Eyes and Happy Smile
- */
-private fun DrawScope.drawScallopedLeafFace(
+private fun DrawScope.drawUprightLeafBodyAndFace(
     center: Offset,
     radius: Float,
     phase: Float,
-    state: CompanionState,
-    color: Color,
-    auraColor: Color,
+    breathScale: Float,
     blinkProgress: Float,
+    state: CompanionState,
+    isCelebrating: Boolean,
+    color: Color,
     archetype: AvatarArchetype
 ) {
-    val faceCenter = Offset(center.x, center.y - (radius * 0.02f * archetype.bodyHeightScale))
-    val maskW = radius * 0.64f * (0.9f + archetype.bodyWidthScale * 0.1f)
-    val maskH = radius * 0.56f * (0.9f + archetype.bodyHeightScale * 0.1f)
+    val leafW = radius * 0.56f * breathScale * archetype.bodyWidthScale
+    val leafH = radius * 0.62f * breathScale * archetype.bodyHeightScale
+
+    val leafBottom = Offset(center.x, center.y + leafH * 0.52f)
+    val tipSway = sin(phase) * 3f
+    val leafTip = Offset(center.x + tipSway, center.y - leafH * 0.72f)
 
     val tiltAngle = when (state) {
-        CompanionState.THINKING -> sin(phase) * 6f
-        CompanionState.LISTENING -> 8f
-        else -> sin(phase * 0.6f) * 2f
+        CompanionState.THINKING -> sin(phase) * 5f
+        CompanionState.LISTENING -> 6f
+        else -> sin(phase * 0.5f) * 2f
     }
 
-    rotate(tiltAngle, pivot = faceCenter) {
-        val leafMaskPath = Path().apply {
-            moveTo(faceCenter.x, faceCenter.y - maskH * 0.52f)
+    rotate(tiltAngle, pivot = center) {
+        // Nascent side budlet leaf for AVATAR_1 and AVATAR_5
+        if (archetype == AvatarArchetype.AVATAR_1 || archetype == AvatarArchetype.AVATAR_5) {
+            val sideLeafLeft = Path().apply {
+                moveTo(leafBottom.x - 2f, leafBottom.y - leafH * 0.12f)
+                cubicTo(
+                    center.x - leafW * 0.95f, leafBottom.y - leafH * 0.22f,
+                    center.x - leafW * 1.05f, leafBottom.y - leafH * 0.55f,
+                    center.x - leafW * 0.72f, leafBottom.y - leafH * 0.68f
+                )
+                cubicTo(
+                    center.x - leafW * 0.45f, leafBottom.y - leafH * 0.50f,
+                    center.x - leafW * 0.25f, leafBottom.y - leafH * 0.25f,
+                    leafBottom.x - 2f, leafBottom.y - leafH * 0.12f
+                )
+                close()
+            }
+            drawPath(sideLeafLeft, color = color.copy(alpha = 0.78f))
+            drawPath(sideLeafLeft, color = Color.White.copy(alpha = 0.35f), style = Stroke(width = 1.6f))
+
+            if (archetype == AvatarArchetype.AVATAR_5) {
+                val sideLeafRight = Path().apply {
+                    moveTo(leafBottom.x + 2f, leafBottom.y - leafH * 0.12f)
+                    cubicTo(
+                        center.x + leafW * 0.95f, leafBottom.y - leafH * 0.22f,
+                        center.x + leafW * 1.05f, leafBottom.y - leafH * 0.55f,
+                        center.x + leafW * 0.72f, leafBottom.y - leafH * 0.68f
+                    )
+                    cubicTo(
+                        center.x + leafW * 0.45f, leafBottom.y - leafH * 0.50f,
+                        center.x + leafW * 0.25f, leafBottom.y - leafH * 0.25f,
+                        leafBottom.x + 2f, leafBottom.y - leafH * 0.12f
+                    )
+                    close()
+                }
+                drawPath(sideLeafRight, color = color.copy(alpha = 0.78f))
+                drawPath(sideLeafRight, color = Color.White.copy(alpha = 0.35f), style = Stroke(width = 1.6f))
+            }
+        }
+
+        // Main Upright Botanical Leaf Blade (Pointed organic leaf tip at top, rounded base at bottom)
+        val leafPath = Path().apply {
+            moveTo(leafBottom.x, leafBottom.y)
+            // Left leaf curve sweeping up to the pointed leaf tip
             cubicTo(
-                faceCenter.x - maskW * 0.35f, faceCenter.y - maskH * 0.62f,
-                faceCenter.x - maskW * 0.56f, faceCenter.y - maskH * 0.25f,
-                faceCenter.x - maskW * 0.52f, faceCenter.y + maskH * 0.12f
+                center.x - leafW * 0.85f, center.y + leafH * 0.28f,
+                center.x - leafW * 0.72f, center.y - leafH * 0.38f,
+                leafTip.x, leafTip.y
             )
+            // Right leaf curve sweeping back down to the leaf base
             cubicTo(
-                faceCenter.x - maskW * 0.48f, faceCenter.y + maskH * 0.48f,
-                faceCenter.x - maskW * 0.22f, faceCenter.y + maskH * 0.52f,
-                faceCenter.x, faceCenter.y + maskH * 0.48f
-            )
-            cubicTo(
-                faceCenter.x + maskW * 0.22f, faceCenter.y + maskH * 0.52f,
-                faceCenter.x + maskW * 0.48f, faceCenter.y + maskH * 0.48f,
-                faceCenter.x + maskW * 0.52f, faceCenter.y + maskH * 0.12f
-            )
-            cubicTo(
-                faceCenter.x + maskW * 0.56f, faceCenter.y - maskH * 0.25f,
-                faceCenter.x + maskW * 0.35f, faceCenter.y - maskH * 0.62f,
-                faceCenter.x, faceCenter.y - maskH * 0.52f
+                center.x + leafW * 0.72f, center.y - leafH * 0.38f,
+                center.x + leafW * 0.85f, center.y + leafH * 0.28f,
+                leafBottom.x, leafBottom.y
             )
             close()
         }
 
+        // Rich tender vertical gradient fill (matches original Tendrils icon aesthetic)
         drawPath(
-            path = leafMaskPath,
-            brush = Brush.radialGradient(
+            path = leafPath,
+            brush = Brush.verticalGradient(
                 colors = listOf(
-                    color.copy(alpha = 0.32f),
-                    color.copy(alpha = 0.18f),
-                    auraColor.copy(alpha = 0.08f)
+                    color,
+                    color.copy(alpha = 0.82f)
                 ),
-                center = faceCenter,
-                radius = maskW * 0.65f
+                startY = leafTip.y,
+                endY = leafBottom.y
             )
         )
 
+        // Bold outer leaf stroke
         drawPath(
-            path = leafMaskPath,
-            color = color.copy(alpha = 0.90f),
-            style = Stroke(width = 3f, cap = StrokeCap.Round)
+            path = leafPath,
+            color = Color.White.copy(alpha = 0.45f),
+            style = Stroke(width = 2.8f, cap = StrokeCap.Round)
+        )
+        drawPath(
+            path = leafPath,
+            color = color,
+            style = Stroke(width = 1.6f, cap = StrokeCap.Round)
         )
 
-        // Veins
+        // Central luminous leaf midrib vein (from bottom stem up to pointed leaf tip)
+        val veinPath = Path().apply {
+            moveTo(leafBottom.x, leafBottom.y - leafH * 0.06f)
+            quadraticBezierTo(
+                center.x + tipSway * 0.4f,
+                center.y - leafH * 0.15f,
+                leafTip.x,
+                leafTip.y + leafH * 0.08f
+            )
+        }
+        drawPath(
+            path = veinPath,
+            color = Color.White.copy(alpha = 0.38f),
+            style = Stroke(width = 2.2f, cap = StrokeCap.Round)
+        )
+
+        // Upper & lower lateral leaf veins
         drawLine(
-            color = color.copy(alpha = 0.40f),
-            start = Offset(faceCenter.x, faceCenter.y - maskH * 0.42f),
-            end = Offset(faceCenter.x, faceCenter.y + maskH * 0.25f),
-            strokeWidth = 2f,
+            color = Color.White.copy(alpha = 0.28f),
+            start = Offset(center.x, center.y - leafH * 0.28f),
+            end = Offset(center.x - leafW * 0.34f, center.y - leafH * 0.42f),
+            strokeWidth = 1.6f,
             cap = StrokeCap.Round
         )
         drawLine(
-            color = color.copy(alpha = 0.25f),
-            start = Offset(faceCenter.x, faceCenter.y - maskH * 0.15f),
-            end = Offset(faceCenter.x - maskW * 0.32f, faceCenter.y - maskH * 0.28f),
-            strokeWidth = 1.4f,
-            cap = StrokeCap.Round
-        )
-        drawLine(
-            color = color.copy(alpha = 0.25f),
-            start = Offset(faceCenter.x, faceCenter.y - maskH * 0.15f),
-            end = Offset(faceCenter.x + maskW * 0.32f, faceCenter.y - maskH * 0.28f),
-            strokeWidth = 1.4f,
+            color = Color.White.copy(alpha = 0.28f),
+            start = Offset(center.x, center.y - leafH * 0.28f),
+            end = Offset(center.x + leafW * 0.34f, center.y - leafH * 0.42f),
+            strokeWidth = 1.6f,
             cap = StrokeCap.Round
         )
 
-        // Anime Eyes
-        val eyeSpacing = maskW * 0.26f
-        val eyeY = faceCenter.y - maskH * 0.04f
-        val eyeRadius = maskW * 0.12f
+        // --- FRIENDLY LEAF FACE (Eyes & Smile integrated naturally on the leaf blade) ---
+        val eyeSpacing = (leafW * 0.26f).coerceIn(radius * 0.11f, radius * 0.20f)
+        val eyeY = center.y - leafH * 0.04f
+        val eyeRadius = (radius * 0.075f).coerceAtLeast(4.5f)
 
-        if (state == CompanionState.COMPLETED) {
-            val leftEyeArc = Path().apply {
-                moveTo(faceCenter.x - eyeSpacing - eyeRadius, eyeY + 2f)
-                quadraticBezierTo(faceCenter.x - eyeSpacing, eyeY - eyeRadius * 1.2f, faceCenter.x - eyeSpacing + eyeRadius, eyeY + 2f)
+        if (isCelebrating) {
+            // Happy joyful curved eyes (^ ^)
+            val leftArc = Path().apply {
+                moveTo(center.x - eyeSpacing - eyeRadius, eyeY + 2f)
+                quadraticBezierTo(center.x - eyeSpacing, eyeY - eyeRadius * 1.3f, center.x - eyeSpacing + eyeRadius, eyeY + 2f)
             }
-            val rightEyeArc = Path().apply {
-                moveTo(faceCenter.x + eyeSpacing - eyeRadius, eyeY + 2f)
-                quadraticBezierTo(faceCenter.x + eyeSpacing, eyeY - eyeRadius * 1.2f, faceCenter.x + eyeSpacing + eyeRadius, eyeY + 2f)
+            val rightArc = Path().apply {
+                moveTo(center.x + eyeSpacing - eyeRadius, eyeY + 2f)
+                quadraticBezierTo(center.x + eyeSpacing, eyeY - eyeRadius * 1.3f, center.x + eyeSpacing + eyeRadius, eyeY + 2f)
             }
-            drawPath(leftEyeArc, color = color, style = Stroke(width = 4f, cap = StrokeCap.Round))
-            drawPath(rightEyeArc, color = color, style = Stroke(width = 4f, cap = StrokeCap.Round))
+            drawPath(leftArc, color = Color.White, style = Stroke(width = 3.2f, cap = StrokeCap.Round))
+            drawPath(rightArc, color = Color.White, style = Stroke(width = 3.2f, cap = StrokeCap.Round))
         } else {
-            val openH = (1f - blinkProgress).coerceAtLeast(0.08f)
+            val openH = (1f - blinkProgress).coerceAtLeast(0.10f)
+            val deepForest = Color(0xFF0A2E1D)
 
-            // Left Eye
+            // Left Eye with soft white rim & double anime sparkle
             drawOval(
-                color = color,
-                topLeft = Offset(faceCenter.x - eyeSpacing - eyeRadius, eyeY - (eyeRadius * openH)),
-                size = Size(eyeRadius * 2f, eyeRadius * 2.2f * openH)
+                color = Color.White.copy(alpha = 0.92f),
+                topLeft = Offset(center.x - eyeSpacing - eyeRadius * 1.15f, eyeY - eyeRadius * 1.2f * openH),
+                size = Size(eyeRadius * 2.3f, eyeRadius * 2.4f * openH)
+            )
+            drawOval(
+                color = deepForest,
+                topLeft = Offset(center.x - eyeSpacing - eyeRadius, eyeY - eyeRadius * openH),
+                size = Size(eyeRadius * 2f, eyeRadius * 2.1f * openH)
             )
             if (openH > 0.4f) {
-                drawCircle(color = Color.White, radius = eyeRadius * 0.42f, center = Offset(faceCenter.x - eyeSpacing - eyeRadius * 0.25f, eyeY - eyeRadius * 0.30f))
-                drawCircle(color = Color.White.copy(alpha = 0.85f), radius = eyeRadius * 0.20f, center = Offset(faceCenter.x - eyeSpacing + eyeRadius * 0.35f, eyeY + eyeRadius * 0.25f))
+                drawCircle(
+                    color = Color.White,
+                    radius = eyeRadius * 0.42f,
+                    center = Offset(center.x - eyeSpacing - eyeRadius * 0.25f, eyeY - eyeRadius * 0.30f)
+                )
+                drawCircle(
+                    color = Color.White.copy(alpha = 0.85f),
+                    radius = eyeRadius * 0.20f,
+                    center = Offset(center.x - eyeSpacing + eyeRadius * 0.32f, eyeY + eyeRadius * 0.25f)
+                )
             }
 
-            // Right Eye
+            // Right Eye with soft white rim & double anime sparkle
             drawOval(
-                color = color,
-                topLeft = Offset(faceCenter.x + eyeSpacing - eyeRadius, eyeY - (eyeRadius * openH)),
-                size = Size(eyeRadius * 2f, eyeRadius * 2.2f * openH)
+                color = Color.White.copy(alpha = 0.92f),
+                topLeft = Offset(center.x + eyeSpacing - eyeRadius * 1.15f, eyeY - eyeRadius * 1.2f * openH),
+                size = Size(eyeRadius * 2.3f, eyeRadius * 2.4f * openH)
+            )
+            drawOval(
+                color = deepForest,
+                topLeft = Offset(center.x + eyeSpacing - eyeRadius, eyeY - eyeRadius * openH),
+                size = Size(eyeRadius * 2f, eyeRadius * 2.1f * openH)
             )
             if (openH > 0.4f) {
-                drawCircle(color = Color.White, radius = eyeRadius * 0.42f, center = Offset(faceCenter.x + eyeSpacing - eyeRadius * 0.25f, eyeY - eyeRadius * 0.30f))
-                drawCircle(color = Color.White.copy(alpha = 0.85f), radius = eyeRadius * 0.20f, center = Offset(faceCenter.x + eyeSpacing + eyeRadius * 0.35f, eyeY + eyeRadius * 0.25f))
+                drawCircle(
+                    color = Color.White,
+                    radius = eyeRadius * 0.42f,
+                    center = Offset(center.x + eyeSpacing - eyeRadius * 0.25f, eyeY - eyeRadius * 0.30f)
+                )
+                drawCircle(
+                    color = Color.White.copy(alpha = 0.85f),
+                    radius = eyeRadius * 0.20f,
+                    center = Offset(center.x + eyeSpacing + eyeRadius * 0.32f, eyeY + eyeRadius * 0.25f)
+                )
             }
         }
 
-        // Smile
-        val mouthY = faceCenter.y + maskH * 0.18f
-        val mouthW = maskW * 0.14f
+        // Warm rosy cheek glow on the leaf
+        drawCircle(
+            color = Color(0xFFFFB2B2).copy(alpha = 0.40f),
+            radius = eyeRadius * 0.75f,
+            center = Offset(center.x - eyeSpacing - eyeRadius * 0.85f, eyeY + eyeRadius * 1.05f)
+        )
+        drawCircle(
+            color = Color(0xFFFFB2B2).copy(alpha = 0.40f),
+            radius = eyeRadius * 0.75f,
+            center = Offset(center.x + eyeSpacing + eyeRadius * 0.85f, eyeY + eyeRadius * 1.05f)
+        )
+
+        // Friendly Smile on the leaf
+        val mouthY = eyeY + eyeRadius * 1.45f
+        val mouthW = eyeSpacing * 0.58f
 
         if (state == CompanionState.SPEAKING) {
-            val mouthOpen = (abs(sin(phase * 4f)) * 5f) + 2.5f
+            val openAmt = (abs(sin(phase * 4f)) * 5f) + 2.5f
             val mouthPath = Path().apply {
-                moveTo(faceCenter.x - mouthW, mouthY)
-                quadraticBezierTo(faceCenter.x, mouthY + mouthOpen + 4f, faceCenter.x + mouthW, mouthY)
-                quadraticBezierTo(faceCenter.x, mouthY + mouthOpen * 0.4f, faceCenter.x - mouthW, mouthY)
+                moveTo(center.x - mouthW, mouthY)
+                quadraticBezierTo(center.x, mouthY + openAmt + 4f, center.x + mouthW, mouthY)
+                quadraticBezierTo(center.x, mouthY + openAmt * 0.3f, center.x - mouthW, mouthY)
             }
-            drawPath(mouthPath, color = color.copy(alpha = 0.90f))
+            drawPath(mouthPath, color = Color.White)
         } else {
-            val mouthPath = Path().apply {
-                moveTo(faceCenter.x - mouthW, mouthY)
-                quadraticBezierTo(faceCenter.x, mouthY + 5.5f, faceCenter.x + mouthW, mouthY)
+            val smilePath = Path().apply {
+                moveTo(center.x - mouthW, mouthY)
+                quadraticBezierTo(center.x, mouthY + 6f, center.x + mouthW, mouthY)
             }
-            drawPath(mouthPath, color = color.copy(alpha = 0.90f), style = Stroke(width = 2.8f, cap = StrokeCap.Round))
+            drawPath(smilePath, color = Color.White, style = Stroke(width = 2.8f, cap = StrokeCap.Round))
         }
-
-        // Cheeks
-        drawCircle(
-            color = Color(0xFFFF8A80).copy(alpha = 0.28f),
-            radius = maskW * 0.09f,
-            center = Offset(faceCenter.x - eyeSpacing - maskW * 0.10f, eyeY + maskH * 0.18f)
-        )
-        drawCircle(
-            color = Color(0xFFFF8A80).copy(alpha = 0.28f),
-            radius = maskW * 0.09f,
-            center = Offset(faceCenter.x + eyeSpacing + maskW * 0.10f, eyeY + maskH * 0.18f)
-        )
     }
 }
 
 /**
- * 3. Morphological Arms Drawing per Archetype (Chubby, Skinny, Tall, Long Limbs, Bonsai)
+ * Draws the 5 distinct types of bold, tender flowing tendrils around the leaf organism.
  */
-private fun DrawScope.drawCustomArms(
+private fun DrawScope.drawArchetypeTendrils(
+    center: Offset,
+    baseRadius: Float,
+    phase: Float,
+    color: Color,
+    archetype: AvatarArchetype
+) {
+    when (archetype.tendrilStyle) {
+        TendrilStyle.RADIAL_CLASSIC -> {
+            // 5 Bold Flowing Radial Tendrils (matches original Tendrils icon spec, bolder)
+            val tendrilCount = 5
+            val angleStep = (2 * PI / tendrilCount).toFloat()
+
+            for (i in 0 until tendrilCount) {
+                val baseAngle = i * angleStep - (PI / 2).toFloat()
+                val wave = sin(phase + i * 1.3f) * 0.35f
+                val currentAngle = baseAngle + wave * 0.4f
+
+                val startDist = baseRadius * 0.45f
+                val startPoint = Offset(
+                    center.x + cos(currentAngle) * startDist,
+                    center.y + sin(currentAngle) * startDist
+                )
+
+                val length = baseRadius * 1.25f + sin(phase * 1.5f + i) * (baseRadius * 0.22f)
+                val cp1Dist = startDist + length * 0.48f
+                val cp1Angle = currentAngle + sin(phase + i) * 0.45f
+                val cp1 = Offset(
+                    center.x + cos(cp1Angle) * cp1Dist,
+                    center.y + sin(cp1Angle) * cp1Dist
+                )
+
+                val endAngle = currentAngle + (if (i % 2 == 0) 0.55f else -0.55f) + cos(phase + i) * 0.28f
+                val endPoint = Offset(
+                    center.x + cos(endAngle) * (startDist + length),
+                    center.y + sin(endAngle) * (startDist + length)
+                )
+
+                val cp2 = Offset(
+                    (cp1.x + endPoint.x) / 2f + cos(phase + i) * (length * 0.18f),
+                    (cp1.y + endPoint.y) / 2f + sin(phase + i) * (length * 0.18f)
+                )
+
+                val tendrilPath = Path().apply {
+                    moveTo(startPoint.x, startPoint.y)
+                    cubicTo(cp1.x, cp1.y, cp2.x, cp2.y, endPoint.x, endPoint.y)
+                }
+
+                drawPath(
+                    path = tendrilPath,
+                    color = color.copy(alpha = 0.88f),
+                    style = Stroke(width = 3.4f, cap = StrokeCap.Round)
+                )
+                drawCircle(color = color, radius = 4.2f, center = endPoint)
+                drawCircle(color = Color.White.copy(alpha = 0.7f), radius = 1.8f, center = endPoint)
+            }
+        }
+
+        TendrilStyle.SPIRAL_FERN -> {
+            // Twin high-curling spiral fern tendrils + 4 side wisps
+            for (dir in listOf(-1f, 1f)) {
+                val sway = sin(phase * 1.8f + dir) * 6f
+                val start = Offset(center.x + dir * baseRadius * 0.2f, center.y - baseRadius * 0.4f)
+                val tip = Offset(center.x + dir * (baseRadius * 1.15f + sway), center.y - baseRadius * 1.35f)
+                val path = Path().apply {
+                    moveTo(start.x, start.y)
+                    cubicTo(
+                        start.x + dir * baseRadius * 0.9f, start.y - baseRadius * 0.5f,
+                        tip.x + dir * baseRadius * 0.35f, tip.y - baseRadius * 0.3f,
+                        tip.x, tip.y
+                    )
+                }
+                drawPath(path, color = color.copy(alpha = 0.90f), style = Stroke(width = 2.8f, cap = StrokeCap.Round))
+                drawCircle(color = Color.White, radius = 3.4f, center = tip)
+                drawCircle(color = color.copy(alpha = 0.5f), radius = 6.5f, center = tip)
+            }
+            // Side fern coils
+            for (side in listOf(-1f, 1f)) {
+                val wispStart = Offset(center.x + side * baseRadius * 0.3f, center.y)
+                val wispEnd = Offset(center.x + side * baseRadius * 1.35f, center.y - baseRadius * 0.25f + sin(phase + side) * 6f)
+                val wispPath = Path().apply {
+                    moveTo(wispStart.x, wispStart.y)
+                    quadraticBezierTo(center.x + side * baseRadius * 0.85f, center.y - baseRadius * 0.45f, wispEnd.x, wispEnd.y)
+                }
+                drawPath(wispPath, color = color.copy(alpha = 0.75f), style = Stroke(width = 2.4f, cap = StrokeCap.Round))
+                drawCircle(color = color, radius = 3.2f, center = wispEnd)
+            }
+        }
+
+        TendrilStyle.CASCADING_WILLOW -> {
+            // Tall arching canopy tendrils that cascade down both sides with glowing leaf beads
+            for (side in listOf(-1f, 1f)) {
+                for (strand in 0..2) {
+                    val start = Offset(center.x + side * (4f + strand * 5f), center.y - baseRadius * 0.75f)
+                    val sway = sin(phase * 1.3f + strand) * 5f
+                    val archX = center.x + side * (baseRadius * (0.75f + strand * 0.28f)) + sway
+                    val archY = center.y - baseRadius * (0.95f - strand * 0.15f)
+                    val endX = archX + side * 6f
+                    val endY = center.y + baseRadius * (0.45f + strand * 0.25f)
+
+                    val path = Path().apply {
+                        moveTo(start.x, start.y)
+                        cubicTo(archX * 0.5f + start.x * 0.5f, archY - 12f, archX, center.y - 10f, endX, endY)
+                    }
+                    drawPath(path, color = color.copy(alpha = 0.85f - strand * 0.15f), style = Stroke(width = 2.8f, cap = StrokeCap.Round))
+                    drawCircle(color = color, radius = 3.5f, center = Offset(endX, endY))
+                    drawCircle(color = Color.White.copy(alpha = 0.65f), radius = 2.2f, center = Offset(archX, (archY + endY) * 0.5f))
+                }
+            }
+        }
+
+        TendrilStyle.STARBURST_WHIP -> {
+            // 7 dynamic long radiating tendrils with golden/emerald tips
+            val count = 7
+            for (i in 0 until count) {
+                val angle = (-PI * 0.85 + i * (PI * 1.7 / (count - 1))).toFloat()
+                val wave = sin(phase * 2f + i) * 0.22f
+                val len = baseRadius * (1.35f + (i % 2) * 0.2f)
+                val start = Offset(center.x + cos(angle) * baseRadius * 0.4f, center.y + sin(angle) * baseRadius * 0.4f)
+                val cp = Offset(
+                    center.x + cos(angle + wave) * (len * 0.65f),
+                    center.y + sin(angle + wave) * (len * 0.65f)
+                )
+                val tip = Offset(
+                    center.x + cos(angle - wave * 0.8f) * len,
+                    center.y + sin(angle - wave * 0.8f) * len
+                )
+                val path = Path().apply {
+                    moveTo(start.x, start.y)
+                    quadraticBezierTo(cp.x, cp.y, tip.x, tip.y)
+                }
+                drawPath(path, color = color.copy(alpha = 0.86f), style = Stroke(width = 3.0f, cap = StrokeCap.Round))
+                drawCircle(color = Color(0xFFFFD54F), radius = 3.8f, center = tip)
+            }
+        }
+
+        TendrilStyle.HALO_CROWN -> {
+            // Intertwined botanical halo crown + 6 outward curling tendrils
+            val count = 6
+            for (i in 0 until count) {
+                val angle = (i * (2 * PI / count)).toFloat() + sin(phase * 0.5f) * 0.15f
+                val nextAngle = ((i + 1) * (2 * PI / count)).toFloat() + sin(phase * 0.5f) * 0.15f
+                val r = baseRadius * 1.25f
+                val p1 = Offset(center.x + cos(angle) * (baseRadius * 0.5f), center.y + sin(angle) * (baseRadius * 0.5f))
+                val p2 = Offset(center.x + cos(nextAngle) * r, center.y + sin(nextAngle) * r)
+                val ctrl = Offset(
+                    center.x + cos((angle + nextAngle) * 0.5f) * (r * 1.25f),
+                    center.y + sin((angle + nextAngle) * 0.5f) * (r * 1.25f)
+                )
+                val path = Path().apply {
+                    moveTo(p1.x, p1.y)
+                    quadraticBezierTo(ctrl.x, ctrl.y, p2.x, p2.y)
+                }
+                drawPath(path, color = color.copy(alpha = 0.82f), style = Stroke(width = 3.2f, cap = StrokeCap.Round))
+                drawCircle(color = color, radius = 4.0f, center = p2)
+                drawCircle(color = Color.White.copy(alpha = 0.8f), radius = 2.0f, center = p2)
+            }
+        }
+    }
+}
+
+/**
+ * Draws the child-like arms & leaf hands that gesture while speaking,
+ * fold a hand & lean on the canvas wall, or reach up to hang on the tree branch.
+ */
+private fun DrawScope.drawLeafChildArms(
     center: Offset,
     radius: Float,
     phase: Float,
     state: CompanionState,
     color: Color,
     isHanging: Boolean,
+    isCelebrating: Boolean,
     archetype: AvatarArchetype
 ) {
-    val armLen = radius * 0.36f * archetype.armLengthScale
+    val armLen = radius * 0.34f * archetype.armLengthScale
     val armThick = 3.6f * archetype.armThicknessScale
-    val shoulderY = center.y + (radius * 0.04f * archetype.bodyHeightScale)
-    val shoulderSpan = radius * 0.32f * archetype.bodyWidthScale
+    val shoulderY = center.y + radius * 0.05f
+    val shoulderSpan = radius * 0.26f * archetype.bodyWidthScale
 
     val shoulderLeft = Offset(center.x - shoulderSpan, shoulderY)
     val shoulderRight = Offset(center.x + shoulderSpan, shoulderY)
 
     if (isHanging) {
-        val leftHand = Offset(center.x - radius * 0.18f, center.y - (radius * 0.42f) - (if (archetype == AvatarArchetype.LONG_STRIDER) radius * 0.15f else 0f))
-        val rightHand = Offset(center.x + radius * 0.18f, center.y - (radius * 0.42f) - (if (archetype == AvatarArchetype.LONG_STRIDER) radius * 0.15f else 0f))
-        drawTwigArm(shoulderLeft, leftHand, color, armThick)
-        drawTwigArm(shoulderRight, rightHand, color, armThick)
-        drawRoundLeafHand(leftHand, -85f, color, archetype)
-        drawRoundLeafHand(rightHand, 85f, color, archetype)
+        val leftHand = Offset(center.x - radius * 0.18f, center.y - radius * 0.44f)
+        val rightHand = Offset(center.x + radius * 0.18f, center.y - radius * 0.44f)
+        drawCurvedChildArm(shoulderLeft, leftHand, color, armThick, isLeft = true)
+        drawCurvedChildArm(shoulderRight, rightHand, color, armThick, isLeft = false)
+        drawLeafHand(leftHand, -85f, color, archetype)
+        drawLeafHand(rightHand, 85f, color, archetype)
+        return
+    }
+
+    if (isCelebrating) {
+        val leftHand = Offset(shoulderLeft.x - armLen * 0.55f, center.y - armLen * 0.85f)
+        val rightHand = Offset(shoulderRight.x + armLen * 0.55f, center.y - armLen * 0.85f)
+        drawCurvedChildArm(shoulderLeft, leftHand, color, armThick, isLeft = true)
+        drawCurvedChildArm(shoulderRight, rightHand, color, armThick, isLeft = false)
+        drawLeafHand(leftHand, -115f, color, archetype)
+        drawLeafHand(rightHand, 115f, color, archetype)
         return
     }
 
     when (state) {
         CompanionState.SPEAKING -> {
+            // Explaining with hands as it speaks
             val waveL = sin(phase * 2.5f) * armLen * 0.35f
             val waveR = cos(phase * 2.5f) * armLen * 0.35f
 
-            val leftHand = Offset(shoulderLeft.x - armLen * 0.85f - waveL, shoulderY - waveL)
-            val rightHand = Offset(shoulderRight.x + armLen * 0.85f + waveR, shoulderY - waveR)
+            val leftHand = Offset(shoulderLeft.x - armLen * 0.80f - waveL, shoulderY - waveL)
+            val rightHand = Offset(shoulderRight.x + armLen * 0.80f + waveR, shoulderY - waveR)
 
-            drawTwigArm(shoulderLeft, leftHand, color, armThick)
-            drawTwigArm(shoulderRight, rightHand, color, armThick)
-            drawRoundLeafHand(leftHand, -40f + sin(phase * 2.5f) * 20f, color, archetype)
-            drawRoundLeafHand(rightHand, 40f - cos(phase * 2.5f) * 20f, color, archetype)
+            drawCurvedChildArm(shoulderLeft, leftHand, color, armThick, isLeft = true)
+            drawCurvedChildArm(shoulderRight, rightHand, color, armThick, isLeft = false)
+            drawLeafHand(leftHand, -40f + sin(phase * 2.5f) * 20f, color, archetype)
+            drawLeafHand(rightHand, 40f - cos(phase * 2.5f) * 20f, color, archetype)
         }
+
         CompanionState.THINKING -> {
-            val cheekHand = Offset(center.x - radius * 0.16f, center.y - radius * 0.06f)
-            val restHand = Offset(shoulderRight.x + armLen * 0.6f, shoulderY + armLen * 0.5f)
+            val cheekHand = Offset(center.x - radius * 0.14f, center.y - radius * 0.02f)
+            val restHand = Offset(shoulderRight.x + armLen * 0.55f, shoulderY + armLen * 0.45f)
 
-            drawTwigArm(shoulderLeft, cheekHand, color, armThick)
-            drawTwigArm(shoulderRight, restHand, color, armThick)
-            drawRoundLeafHand(cheekHand, -75f, color, archetype)
-            drawRoundLeafHand(restHand, 15f, color, archetype)
+            drawCurvedChildArm(shoulderLeft, cheekHand, color, armThick, isLeft = true)
+            drawCurvedChildArm(shoulderRight, restHand, color, armThick, isLeft = false)
+            drawLeafHand(cheekHand, -75f, color, archetype)
+            drawLeafHand(restHand, 15f, color, archetype)
         }
+
         CompanionState.LISTENING -> {
-            val earHand = Offset(center.x + shoulderSpan + armLen * 0.3f, center.y - radius * 0.14f)
-            val restHand = Offset(shoulderLeft.x - armLen * 0.4f, shoulderY + armLen * 0.5f)
+            val earHand = Offset(center.x + shoulderSpan + armLen * 0.35f, center.y - radius * 0.14f)
+            val restHand = Offset(shoulderLeft.x - armLen * 0.45f, shoulderY + armLen * 0.45f)
 
-            drawTwigArm(shoulderLeft, restHand, color, armThick)
-            drawTwigArm(shoulderRight, earHand, color, armThick)
-            drawRoundLeafHand(restHand, -15f, color, archetype)
-            drawRoundLeafHand(earHand, 60f, color, archetype)
+            drawCurvedChildArm(shoulderLeft, restHand, color, armThick, isLeft = true)
+            drawCurvedChildArm(shoulderRight, earHand, color, armThick, isLeft = false)
+            drawLeafHand(restHand, -15f, color, archetype)
+            drawLeafHand(earHand, 60f, color, archetype)
         }
-        CompanionState.COMPLETED -> {
-            val leftHand = Offset(shoulderLeft.x - armLen * 0.5f, center.y - armLen * 0.9f)
-            val rightHand = Offset(shoulderRight.x + armLen * 0.5f, center.y - armLen * 0.9f)
 
-            drawTwigArm(shoulderLeft, leftHand, color, armThick)
-            drawTwigArm(shoulderRight, rightHand, color, armThick)
-            drawRoundLeafHand(leftHand, -115f, color, archetype)
-            drawRoundLeafHand(rightHand, 115f, color, archetype)
-        }
         else -> {
-            // Idle / Leaning: Long Strider folds one arm to lean on canvas walls!
-            val leftHand = if (archetype == AvatarArchetype.LONG_STRIDER) {
-                Offset(center.x - (radius * 0.82f), shoulderY - (radius * 0.10f))
+            // Long-limbed avatar folds a hand and leans playfully on the canvas wall
+            val leftHand = if (archetype == AvatarArchetype.AVATAR_4) {
+                Offset(center.x - radius * 0.84f, shoulderY - radius * 0.08f)
             } else {
-                Offset(shoulderLeft.x - armLen * 0.5f, shoulderY + armLen * 0.4f + sin(phase) * 2.5f)
+                Offset(shoulderLeft.x - armLen * 0.55f, shoulderY + armLen * 0.38f + sin(phase) * 2.5f)
             }
-            val rightHand = Offset(shoulderRight.x + armLen * 0.5f, shoulderY + armLen * 0.4f - sin(phase) * 2.5f)
+            val rightHand = Offset(shoulderRight.x + armLen * 0.55f, shoulderY + armLen * 0.38f - sin(phase) * 2.5f)
 
-            drawTwigArm(shoulderLeft, leftHand, color, armThick)
-            drawTwigArm(shoulderRight, rightHand, color, armThick)
-            drawRoundLeafHand(leftHand, if (archetype == AvatarArchetype.LONG_STRIDER) -80f else -20f, color, archetype)
-            drawRoundLeafHand(rightHand, 20f, color, archetype)
+            drawCurvedChildArm(shoulderLeft, leftHand, color, armThick, isLeft = true)
+            drawCurvedChildArm(shoulderRight, rightHand, color, armThick, isLeft = false)
+            drawLeafHand(leftHand, if (archetype == AvatarArchetype.AVATAR_4) -85f else -25f, color, archetype)
+            drawLeafHand(rightHand, 25f, color, archetype)
         }
     }
 }
 
-private fun DrawScope.drawTwigArm(start: Offset, end: Offset, color: Color, thickness: Float) {
-    val mid = Offset((start.x + end.x) / 2f + 3f, (start.y + end.y) / 2f + 3f)
+private fun DrawScope.drawCurvedChildArm(
+    start: Offset,
+    end: Offset,
+    color: Color,
+    thickness: Float,
+    isLeft: Boolean
+) {
+    val dir = if (isLeft) -1f else 1f
+    val elbow = Offset(
+        (start.x + end.x) * 0.5f + dir * 6f,
+        (start.y + end.y) * 0.5f + 5f
+    )
     val path = Path().apply {
         moveTo(start.x, start.y)
-        quadraticBezierTo(mid.x, mid.y, end.x, end.y)
+        quadraticBezierTo(elbow.x, elbow.y, end.x, end.y)
     }
-    drawPath(path, color = color.copy(alpha = 0.88f), style = Stroke(width = thickness, cap = StrokeCap.Round))
+    drawPath(path, color = color, style = Stroke(width = thickness, cap = StrokeCap.Round))
 }
 
-private fun DrawScope.drawRoundLeafHand(position: Offset, angle: Float, color: Color, archetype: AvatarArchetype) {
+private fun DrawScope.drawLeafHand(position: Offset, angle: Float, color: Color, archetype: AvatarArchetype) {
     rotate(angle, pivot = position) {
-        val handScale = if (archetype == AvatarArchetype.GINKGO_SAGE) 1.35f else if (archetype == AvatarArchetype.CHUBBY_SPROUT) 1.25f else 1.0f
-        val handW = 13f * handScale
-        val handH = 17f * handScale
+        val scale = if (archetype == AvatarArchetype.AVATAR_1 || archetype == AvatarArchetype.AVATAR_5) 1.2f else 1.0f
+        val handW = 12f * scale
+        val handH = 16f * scale
         val path = Path().apply {
             moveTo(position.x, position.y)
             cubicTo(
-                position.x - handW * 0.5f, position.y - handH * 0.35f,
-                position.x - handW * 0.4f, position.y - handH,
+                position.x - handW * 0.55f, position.y - handH * 0.35f,
+                position.x - handW * 0.45f, position.y - handH,
                 position.x, position.y - handH
             )
             cubicTo(
-                position.x + handW * 0.4f, position.y - handH,
-                position.x + handW * 0.5f, position.y - handH * 0.35f,
+                position.x + handW * 0.45f, position.y - handH,
+                position.x + handW * 0.55f, position.y - handH * 0.35f,
                 position.x, position.y
             )
             close()
         }
-        drawPath(path, color = color.copy(alpha = 0.90f))
-        drawPath(path, color = Color.White.copy(alpha = 0.35f), style = Stroke(width = 1.2f))
+        drawPath(path, color = color)
+        drawPath(path, color = Color.White.copy(alpha = 0.45f), style = Stroke(width = 1.3f))
     }
 }
 
 /**
- * 4. Morphological Legs / Paws per Archetype (Chubby, Skinny, Tall, Long Limbs, Bonsai)
+ * Draws the child-like legs & root feet that jump around playfully or kick when hanging.
  */
-private fun DrawScope.drawCustomPaws(
+private fun DrawScope.drawLeafChildLegs(
     center: Offset,
     radius: Float,
     phase: Float,
@@ -658,216 +838,68 @@ private fun DrawScope.drawCustomPaws(
     isHanging: Boolean,
     archetype: AvatarArchetype
 ) {
-    val legLen = radius * 0.38f * archetype.legLengthScale
-    val legThick = 3.6f * archetype.legThicknessScale
-    val pawSpacing = radius * 0.18f * archetype.bodyWidthScale
-    val hipY = center.y + (radius * 0.38f * archetype.bodyHeightScale)
+    val legLen = radius * 0.32f * archetype.legLengthScale
+    val legThick = 3.8f * archetype.legThicknessScale
+    val hipSpacing = (radius * 0.14f * archetype.bodyWidthScale).coerceIn(radius * 0.08f, radius * 0.22f)
+    val hipY = center.y + (radius * 0.28f * archetype.bodyHeightScale)
 
-    val hopL = if (isHopping) sin(phase * 2f).coerceAtLeast(0f) * 6f else 0f
-    val hopR = if (isHopping) cos(phase * 2f).coerceAtLeast(0f) * 6f else 0f
+    val liftL = if (isHopping || isHanging) sin(phase * 2.5f).coerceAtLeast(0f) * 6f else 0f
+    val liftR = if (isHopping || isHanging) cos(phase * 2.5f).coerceAtLeast(0f) * 6f else 0f
 
     for (isLeft in listOf(true, false)) {
         val sign = if (isLeft) -1f else 1f
-        val hop = if (isLeft) hopL else hopR
-        val hip = Offset(center.x + (sign * pawSpacing), hipY)
+        val lift = if (isLeft) liftL else liftR
+        val hip = Offset(center.x + sign * hipSpacing, hipY)
+        val knee = Offset(
+            hip.x + sign * (if (archetype == AvatarArchetype.AVATAR_4) 7f else 3f),
+            hip.y + legLen * 0.5f - lift * 0.5f
+        )
+        val foot = Offset(
+            hip.x + sign * 2f,
+            hip.y + legLen - lift
+        )
 
-        if (archetype == AvatarArchetype.LONG_STRIDER) {
-            // Extra-long springy stilt legs with articulated knee joint!
-            val kneeX = hip.x + (sign * 8f) + sin(phase * 1.5f + (if (isLeft) 0f else 1f)) * 4f
-            val kneeY = hip.y + (legLen * 0.52f) - hop
-            val footX = kneeX - (sign * 4f)
-            val footY = hip.y + legLen - (hop * 1.5f)
-
-            drawLine(color = color.copy(alpha = 0.90f), start = hip, end = Offset(kneeX, kneeY), strokeWidth = legThick, cap = StrokeCap.Round)
-            drawLine(color = color.copy(alpha = 0.90f), start = Offset(kneeX, kneeY), end = Offset(footX, footY), strokeWidth = legThick, cap = StrokeCap.Round)
-            drawCircle(color = color, radius = legThick * 0.9f, center = Offset(kneeX, kneeY))
-            drawPaw(Offset(footX, footY), color, scale = 1.0f)
-        } else if (archetype == AvatarArchetype.TALL_WILLOW) {
-            val footY = hip.y + legLen - hop
-            drawLine(color = color.copy(alpha = 0.90f), start = hip, end = Offset(hip.x, footY), strokeWidth = legThick * 1.2f, cap = StrokeCap.Round)
-            drawPaw(Offset(hip.x, footY), color, scale = 1.15f)
-        } else if (archetype == AvatarArchetype.SKINNY_TWIGLET) {
-            val footY = hip.y + legLen - hop
-            drawLine(color = color.copy(alpha = 0.85f), start = hip, end = Offset(hip.x + sign * 2f, footY), strokeWidth = legThick, cap = StrokeCap.Round)
-            drawPaw(Offset(hip.x + sign * 2f, footY), color, scale = 0.85f)
-        } else {
-            val footY = hip.y + (legLen * 0.45f) - hop
-            drawPaw(Offset(hip.x, footY), color, scale = if (archetype == AvatarArchetype.CHUBBY_SPROUT) 1.28f else 1.1f)
+        val legPath = Path().apply {
+            moveTo(hip.x, hip.y)
+            quadraticBezierTo(knee.x, knee.y, foot.x, foot.y)
         }
+        drawPath(legPath, color = color, style = Stroke(width = legThick, cap = StrokeCap.Round))
+
+        // Cute rounded child foot
+        val footScale = if (archetype == AvatarArchetype.AVATAR_1) 1.25f else 1.0f
+        val footW = 16f * footScale
+        val footH = 9f * footScale
+        drawOval(
+            color = color,
+            topLeft = Offset(foot.x - footW * 0.5f + sign * 2f, foot.y - 2f),
+            size = Size(footW, footH)
+        )
+        drawOval(
+            color = Color.White.copy(alpha = 0.35f),
+            topLeft = Offset(foot.x - footW * 0.38f + sign * 2f, foot.y - 1f),
+            size = Size(footW * 0.76f, footH * 0.65f),
+            style = Stroke(width = 1.2f)
+        )
     }
 }
 
-private fun DrawScope.drawPaw(pos: Offset, color: Color, scale: Float = 1.0f) {
-    val pawW = 18f * scale
-    val pawH = 11f * scale
-    drawOval(
-        color = color.copy(alpha = 0.92f),
-        topLeft = Offset(pos.x - pawW * 0.5f, pos.y),
-        size = Size(pawW, pawH)
-    )
-    drawOval(
-        color = Color.White.copy(alpha = 0.30f),
-        topLeft = Offset(pos.x - pawW * 0.38f, pos.y + 1f),
-        size = Size(pawW * 0.76f, pawH * 0.65f),
-        style = Stroke(width = 1.2f)
-    )
-}
-
-/**
- * 5. Distinct Tendril Styles per Archetype
- */
-private fun DrawScope.drawCustomCrownSproutAndTendrils(
-    center: Offset,
-    radius: Float,
-    phase: Float,
-    state: CompanionState,
-    color: Color,
-    archetype: AvatarArchetype
-) {
-    val topY = center.y - (radius * 0.38f * archetype.bodyHeightScale)
-    val topCenter = Offset(center.x, topY)
-
-    // Base dual sprout leaves
-    val leafW = 13f
-    val leafH = 19f
-    val wiggle = sin(phase * 2f) * 2f
-
-    val leftLeaf = Path().apply {
-        moveTo(topCenter.x, topCenter.y)
-        quadraticBezierTo(topCenter.x - leafW + wiggle, topCenter.y - leafH * 0.5f, topCenter.x - leafW * 0.8f + wiggle, topCenter.y - leafH)
-        quadraticBezierTo(topCenter.x - leafW * 0.2f, topCenter.y - leafH * 0.7f, topCenter.x, topCenter.y)
-    }
-    val rightLeaf = Path().apply {
-        moveTo(topCenter.x, topCenter.y)
-        quadraticBezierTo(topCenter.x + leafW + wiggle, topCenter.y - leafH * 0.5f, topCenter.x + leafW * 0.8f + wiggle, topCenter.y - leafH)
-        quadraticBezierTo(topCenter.x + leafW * 0.2f, topCenter.y - leafH * 0.7f, topCenter.x, topCenter.y)
-    }
-    drawPath(leftLeaf, color = color.copy(alpha = 0.95f))
-    drawPath(rightLeaf, color = color.copy(alpha = 0.95f))
-
-    // Archetype-Specific Tendril Structures
-    when (archetype.tendrilStyle) {
-        TendrilStyle.FIDDLEHEAD_COIL -> {
-            // Chubby Sprout: Rolled spiral fern fiddleheads with warm golden tips
-            for (dir in listOf(-1f, 1f)) {
-                val coilPath = Path()
-                val startX = topCenter.x + (dir * 6f)
-                val startY = topCenter.y
-                coilPath.moveTo(startX, startY)
-                val cx1 = startX + (dir * 12f)
-                val cy1 = startY - 14f + sin(phase * 2f) * 2f
-                val cx2 = startX + (dir * 18f)
-                val cy2 = startY - 26f
-                val endX = startX + (dir * 12f)
-                val endY = startY - 30f
-                coilPath.cubicTo(cx1, cy1, cx2, cy2, endX, endY)
-                coilPath.quadraticBezierTo(startX + (dir * 6f), startY - 28f, startX + (dir * 10f), startY - 24f)
-                drawPath(coilPath, color = color.copy(alpha = 0.95f), style = Stroke(width = 3.2f, cap = StrokeCap.Round))
-                drawCircle(color = Color(0xFFFFD54F), radius = 3.5f, center = Offset(startX + (dir * 10f), startY - 24f))
-            }
-        }
-
-        TendrilStyle.SPIRAL_ANTENNAE -> {
-            // Skinny Twiglet: Twin high-reaching flexible coiled vine antennas with reactive tip lights
-            for (dir in listOf(-1f, 1f)) {
-                val antPath = Path()
-                val startX = topCenter.x + (dir * 5f)
-                antPath.moveTo(startX, topCenter.y)
-                val sway = sin(phase * 2.5f + dir) * 6f
-                val antMidX = startX + (dir * 14f) + sway
-                val antMidY = topCenter.y - (radius * 0.32f)
-                val antTipX = startX + (dir * 24f) + (sway * 1.5f)
-                val antTipY = topCenter.y - (radius * 0.55f)
-                antPath.cubicTo(antMidX, antMidY, antMidX + dir * 6f, antTipY + 12f, antTipX, antTipY)
-                drawPath(antPath, color = color.copy(alpha = 0.95f), style = Stroke(width = 2.4f, cap = StrokeCap.Round))
-                drawCircle(color = Color.White, radius = 3.2f, center = Offset(antTipX, antTipY))
-                drawCircle(color = color.copy(alpha = 0.60f), radius = 6f, center = Offset(antTipX, antTipY))
-            }
-        }
-
-        TendrilStyle.WEEPING_WILLOW -> {
-            // Tall Willow: Cascading weeping willow fronds draping down both sides like a regal cloak of green strands
-            for (side in listOf(-1f, 1f)) {
-                for (strand in 0..3) {
-                    val strandPath = Path()
-                    val startX = topCenter.x + (side * (6f + strand * 7f))
-                    strandPath.moveTo(startX, topCenter.y)
-                    val sway = sin(phase * 1.2f + strand) * (5f + strand * 2f)
-                    val drapeX = startX + (side * (12f + strand * 6f)) + sway
-                    val drapeMidY = topCenter.y + (radius * 0.25f)
-                    val drapeTipY = topCenter.y + (radius * 0.55f) + (strand * 8f)
-                    strandPath.cubicTo(startX + side * 10f, topCenter.y + 10f, drapeX, drapeMidY, drapeX + side * 4f, drapeTipY)
-                    drawPath(strandPath, color = color.copy(alpha = 0.75f - strand * 0.12f), style = Stroke(width = 2.0f, cap = StrokeCap.Round))
-                    drawCircle(color = color, radius = 2.4f, center = Offset(drapeX + side * 4f, drapeTipY))
-                }
-            }
-        }
-
-        TendrilStyle.STARBURST_TENDRILS -> {
-            // Long Strider: 5 radiating bouncy starburst vine shoots with star leaf tips
-            val shootCount = 5
-            for (i in 0 until shootCount) {
-                val angleDeg = -65f + (i * (130f / (shootCount - 1)))
-                val angleRad = (angleDeg * PI / 180f).toFloat()
-                val len = radius * 0.42f * (1f + sin(phase * 2f + i) * 0.18f)
-                val curl = sin(phase * 1.8f + i) * 12f
-
-                val start = Offset(topCenter.x + sin(angleRad) * 4f, topCenter.y)
-                val tip = Offset(start.x + sin(angleRad) * len + curl, start.y - cos(angleRad) * len)
-
-                val path = Path().apply {
-                    moveTo(start.x, start.y)
-                    quadraticBezierTo(start.x + sin(angleRad) * len * 0.5f + curl * 0.6f, start.y - cos(angleRad) * len * 0.5f, tip.x, tip.y)
-                }
-                drawPath(path, color = color.copy(alpha = 0.85f), style = Stroke(width = 2.8f, cap = StrokeCap.Round))
-                drawCircle(color = Color(0xFFFFD54F), radius = 3.6f, center = tip)
-            }
-        }
-
-        TendrilStyle.GINKGO_CANOPY -> {
-            // Bonsai Sage: Multi-tiered Ginkgo biloba fan frond umbrella crown
-            for (tier in 0..2) {
-                val tierW = radius * (0.60f + tier * 0.16f)
-                val tierY = topCenter.y - (10f + tier * 12f)
-                val fanPath = Path().apply {
-                    moveTo(topCenter.x - tierW * 0.5f, tierY + 6f)
-                    cubicTo(
-                        topCenter.x - tierW * 0.35f, tierY - 10f,
-                        topCenter.x + tierW * 0.35f, tierY - 10f,
-                        topCenter.x + tierW * 0.5f, tierY + 6f
-                    )
-                    close()
-                }
-                drawPath(fanPath, color = color.copy(alpha = 0.45f + tier * 0.20f))
-                drawPath(fanPath, color = color, style = Stroke(width = 1.8f))
-            }
-        }
-    }
-}
-
-/**
- * 6. Overhead Tree Branch
- */
 private fun DrawScope.drawOverheadTreeBranch(
     center: Offset,
     radius: Float,
     phase: Float,
     color: Color
 ) {
-    val branchY = center.y - radius * 0.44f
+    val branchY = center.y - radius * 0.48f
     val path = Path().apply {
-        moveTo(center.x - radius * 0.55f, branchY + 8f)
-        quadraticBezierTo(center.x, branchY - 10f + sin(phase) * 2f, center.x + radius * 0.55f, branchY + 6f)
+        moveTo(center.x - radius * 0.58f, branchY + 8f)
+        quadraticBezierTo(center.x, branchY - 10f + sin(phase) * 2f, center.x + radius * 0.58f, branchY + 6f)
     }
 
-    drawPath(path, color = color.copy(alpha = 0.85f), style = Stroke(width = 4.2f, cap = StrokeCap.Round))
-    drawCircle(color = color, radius = 4f, center = Offset(center.x - radius * 0.28f, branchY - 6f))
-    drawCircle(color = color, radius = 5f, center = Offset(center.x + radius * 0.22f, branchY - 7f))
+    drawPath(path, color = color.copy(alpha = 0.90f), style = Stroke(width = 4.5f, cap = StrokeCap.Round))
+    drawCircle(color = color, radius = 4.5f, center = Offset(center.x - radius * 0.30f, branchY - 6f))
+    drawCircle(color = color, radius = 5.0f, center = Offset(center.x + radius * 0.24f, branchY - 7f))
 }
 
-/**
- * 7. Celebration Burst / Congratulations Explosion Particles
- */
 private fun DrawScope.drawCelebrationBurst(
     center: Offset,
     radius: Float,
@@ -882,13 +914,13 @@ private fun DrawScope.drawCelebrationBurst(
         val pY = center.y + sin(angle) * dist
 
         val particleColor = when (i % 3) {
-            0 -> Color(0xFFFFD54F) // Warm gold
-            1 -> color             // Companion primary state color
-            else -> Color(0xFF80CBC4) // Soft mint
+            0 -> Color(0xFFFFD54F)
+            1 -> color
+            else -> Color(0xFF80CBC4)
         }
 
         drawCircle(
-            color = particleColor.copy(alpha = 0.85f),
+            color = particleColor.copy(alpha = 0.88f),
             radius = 3.5f + (i % 2) * 2f,
             center = Offset(pX, pY)
         )

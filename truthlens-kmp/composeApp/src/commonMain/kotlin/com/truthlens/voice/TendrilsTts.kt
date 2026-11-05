@@ -7,6 +7,7 @@ package com.truthlens.voice
  */
 expect object TendrilsTts {
     fun speak(text: String, languageCode: String = "en", pitch: Float = 1.0f, speed: Float = 1.0f)
+    fun speakChunk(text: String, flush: Boolean = false, languageCode: String = "en", pitch: Float = 1.0f, speed: Float = 1.0f)
     fun stop()
     fun isSpeaking(): Boolean
 }

@@ -4,12 +4,15 @@ actual object TendrilsTts {
     private var currentlySpeaking = false
 
     actual fun speak(text: String, languageCode: String, pitch: Float, speed: Float) {
+        speakChunk(text, flush = true, languageCode = languageCode, pitch = pitch, speed = speed)
+    }
+
+    actual fun speakChunk(text: String, flush: Boolean, languageCode: String, pitch: Float, speed: Float) {
         currentlySpeaking = true
-        println("Tendrils Desktop TTS speaking [lang=$languageCode, speed=$speed]: $text")
-        // Ready for desktop ONNX voice model in future milestone
+        println("Tendrils Desktop TTS speaking [flush=$flush, lang=$languageCode, speed=$speed]: $text")
         Thread {
             try {
-                Thread.sleep(1500)
+                Thread.sleep(600)
             } catch (_: Exception) {}
             currentlySpeaking = false
         }.start()

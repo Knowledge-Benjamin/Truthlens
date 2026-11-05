@@ -84,62 +84,104 @@ fun ProfileScreen() {
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // User Header Card
+            // User Header & 5 Avatar Selector Card
             TendrilsCard(
                 modifier = Modifier.fillMaxWidth(),
                 backgroundColor = TendrilsTheme.colors.surface,
-                padding = 16.dp,
-                onClick = { activeDialog = "edit_profile" }
+                padding = 16.dp
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
+                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Row(
                         modifier = Modifier
-                            .size(56.dp)
-                            .clip(CircleShape)
-                            .background(TendrilsTheme.colors.primary.copy(alpha = 0.2f))
-                            .border(2.dp, TendrilsTheme.colors.primary, CircleShape),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .clickable { activeDialog = "edit_profile" },
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = displayName.take(1).uppercase(),
-                            style = TendrilsTheme.typography.h2,
-                            color = TendrilsTheme.colors.primary
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(14.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = displayName,
-                            style = TendrilsTheme.typography.h3,
-                            color = TendrilsTheme.colors.textPrimary
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
                         Box(
                             modifier = Modifier
-                                .background(TendrilsTheme.colors.surfaceElevated, PillShape)
-                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                                .size(58.dp)
+                                .clip(CircleShape)
+                                .background(TendrilsTheme.colors.primary.copy(alpha = 0.14f))
+                                .border(2.dp, TendrilsTheme.colors.primary, CircleShape),
+                            contentAlignment = Alignment.Center
                         ) {
+                            com.truthlens.ui.components.TendrilOrganism(
+                                state = com.truthlens.ui.model.CompanionState.IDLE,
+                                size = 48.dp,
+                                archetype = com.truthlens.ui.components.AvatarManager.selectedArchetype,
+                                interactiveOnTap = false
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(14.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "${selectedExperience.title} Mode",
-                                style = TendrilsTheme.typography.caption,
-                                color = TendrilsTheme.colors.textSecondary,
-                                fontSize = 11.sp
+                                text = displayName,
+                                style = TendrilsTheme.typography.h3,
+                                color = TendrilsTheme.colors.textPrimary
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Box(
+                                modifier = Modifier
+                                    .background(TendrilsTheme.colors.surfaceElevated, PillShape)
+                                    .padding(horizontal = 8.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "${selectedExperience.title} Mode",
+                                    style = TendrilsTheme.typography.caption,
+                                    color = TendrilsTheme.colors.textSecondary,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+
+                        IconButton(onClick = { activeDialog = "edit_profile" }) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit profile",
+                                tint = TendrilsTheme.colors.textMuted,
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                     }
 
-                    IconButton(onClick = { activeDialog = "edit_profile" }) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit name",
-                            tint = TendrilsTheme.colors.textMuted,
-                            modifier = Modifier.size(18.dp)
-                        )
+                    Divider(color = TendrilsTheme.colors.border.copy(alpha = 0.5f))
+
+                    // 5 Selectable Companion Avatars
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        com.truthlens.ui.components.AvatarArchetype.entries.forEach { arc ->
+                            val isSelected = com.truthlens.ui.components.AvatarManager.selectedArchetype == arc
+                            Box(
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (isSelected) TendrilsTheme.colors.primary.copy(alpha = 0.18f)
+                                        else TendrilsTheme.colors.surfaceElevated
+                                    )
+                                    .border(
+                                        width = if (isSelected) 2.2.dp else 1.dp,
+                                        color = if (isSelected) TendrilsTheme.colors.primary else TendrilsTheme.colors.border,
+                                        shape = CircleShape
+                                    )
+                                    .clickable {
+                                        com.truthlens.ui.components.AvatarManager.selectedArchetype = arc
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                com.truthlens.ui.components.TendrilOrganism(
+                                    state = com.truthlens.ui.model.CompanionState.IDLE,
+                                    size = 46.dp,
+                                    archetype = arc,
+                                    interactiveOnTap = false
+                                )
+                            }
+                        }
                     }
                 }
             }

@@ -521,6 +521,41 @@ fun EditProfileDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    com.truthlens.ui.components.AvatarArchetype.entries.forEach { arc ->
+                        val isSel = com.truthlens.ui.components.AvatarManager.selectedArchetype == arc
+                        Box(
+                            modifier = Modifier
+                                .size(50.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (isSel) TendrilsTheme.colors.primary.copy(alpha = 0.18f)
+                                    else TendrilsTheme.colors.surfaceElevated
+                                )
+                                .border(
+                                    width = if (isSel) 2.dp else 1.dp,
+                                    color = if (isSel) TendrilsTheme.colors.primary else TendrilsTheme.colors.border,
+                                    shape = CircleShape
+                                )
+                                .clickable {
+                                    com.truthlens.ui.components.AvatarManager.selectedArchetype = arc
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            com.truthlens.ui.components.TendrilOrganism(
+                                state = com.truthlens.ui.model.CompanionState.IDLE,
+                                size = 42.dp,
+                                archetype = arc,
+                                interactiveOnTap = false
+                            )
+                        }
+                    }
+                }
+
                 Text(
                     text = "Choose the display name Tendrils uses when greeting you.",
                     style = TendrilsTheme.typography.body2,

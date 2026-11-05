@@ -67,7 +67,7 @@ fun HomeScreen() {
                     role = ChatMessage.Role.ASSISTANT,
                     content = "# Hello, Explorer!\nI am Tendrils, your personal companion. What would you like to explore or learn today?\n- Ask me to explain any complex subject\n- Test suspicious links or messages\n- Brainstorm creative stories and study plans",
                     followUps = listOf(
-                        "Explain photosynthesis simply",
+                        "How do search engines work?",
                         "How do I spot a fake online link?",
                         "Help me create a revision schedule"
                     )
@@ -100,7 +100,7 @@ fun HomeScreen() {
                 try {
                     try { listState.scrollToItem(messages.size - 1) } catch (_: Throwable) {}
                     companionState = CompanionState.THINKING
-                    delay(500)
+                    delay(180)
 
                     val assistantMsgId = "a_${messages.size}"
                     var accumulated = ""
@@ -113,9 +113,30 @@ fun HomeScreen() {
                     messages = messages + initialAssistantMsg
                     companionState = CompanionState.SPEAKING
 
-                    // Real streaming from Llamatik native engine
+                    var ttsChunkBuffer = ""
+                    var isFirstTtsChunk = true
+
+                    // Real streaming from Llamatik engine with early 5-word TTS start
                     com.truthlens.llm.LlamatikEngine.generateStreaming(query).collect { token ->
                         accumulated += token
+                        ttsChunkBuffer += token
+
+                        val meaningfulWordCount = ttsChunkBuffer
+                            .split(Regex("\\s+"))
+                            .count { word -> word.any { ch -> ch.isLetterOrDigit() } }
+
+                        val hasClauseBreak = token.contains("\n") || token.contains(".") ||
+                            token.contains("!") || token.contains("?") || token.contains(":")
+
+                        if (isFirstTtsChunk && (meaningfulWordCount >= 5 || (meaningfulWordCount >= 3 && hasClauseBreak))) {
+                            com.truthlens.voice.TendrilsTts.speakChunk(ttsChunkBuffer, flush = true)
+                            ttsChunkBuffer = ""
+                            isFirstTtsChunk = false
+                        } else if (!isFirstTtsChunk && ((meaningfulWordCount >= 5 && hasClauseBreak) || meaningfulWordCount >= 9)) {
+                            com.truthlens.voice.TendrilsTts.speakChunk(ttsChunkBuffer, flush = false)
+                            ttsChunkBuffer = ""
+                        }
+
                         messages = messages.map { msg ->
                             if (msg.id == assistantMsgId) {
                                 msg.copy(content = accumulated)
@@ -136,8 +157,12 @@ fun HomeScreen() {
                         } else msg
                     }
 
-                    // Voice output via native TTS engine
-                    com.truthlens.voice.TendrilsTts.speak(finalContent)
+                    // Flush any remaining unspoken trailing words (or full fallback response)
+                    if (accumulated.isBlank()) {
+                        com.truthlens.voice.TendrilsTts.speakChunk(finalContent, flush = true)
+                    } else if (ttsChunkBuffer.any { it.isLetterOrDigit() }) {
+                        com.truthlens.voice.TendrilsTts.speakChunk(ttsChunkBuffer, flush = isFirstTtsChunk)
+                    }
 
                     delay(300)
                     companionState = CompanionState.COMPLETED
@@ -203,16 +228,16 @@ fun HomeScreen() {
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(TendrilsTheme.colors.primary.copy(alpha = 0.2f))
+                        .background(TendrilsTheme.colors.primary.copy(alpha = 0.14f))
                         .border(1.5.dp, TendrilsTheme.colors.primary, CircleShape)
                         .clickable { tabNavigator.current = ProfileTab },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "E",
-                        fontWeight = FontWeight.Bold,
-                        color = TendrilsTheme.colors.primary,
-                        fontSize = 16.sp
+                    com.truthlens.ui.components.TendrilOrganism(
+                        state = companionState,
+                        size = 34.dp,
+                        archetype = com.truthlens.ui.components.AvatarManager.selectedArchetype,
+                        interactiveOnTap = false
                     )
                 }
             }
@@ -518,64 +543,18 @@ private fun AttachmentOption(
     }
 }
 
-// Realistic contextual assistant responses with markdown headers, lists, and advice
 private fun generateCompanionResponse(query: String): String {
-    val q = query.lowercase()
-    return when {
-        q.contains("photosynthesis") -> """
-# Photosynthesis Explained
-Photosynthesis is how plants turn natural sunlight into living energy!
-
-## Key Steps:
-- **Sunlight Capture:** Leaves absorb green light wavelengths through chlorophyll.
-- **Water Absorption:** Roots draw moisture up from the soil.
-- **Clean Energy Output:** The plant releases fresh oxygen for us to breathe and stores glucose as fuel.
-
-Would you like to explore plant cells or look at an illustrated diagram next?
-        """.trimIndent()
-
-        q.contains("link") || q.contains("fake") -> """
-# Digital Safety Guide: Spotting Suspicious Links
-Before opening an unknown message or link, check these core indicators:
-
-## Warning Signs to Watch:
-- **Misspelled Domains:** Watch out for `rn` instead of `m` or extra subdomains.
-- **Urgent Emotional Tone:** Scams often claim an account will be deleted within 10 minutes.
-- **Missing SSL/Provenance:** Legitimate services use verified certificates and consistent branding.
-
-Tip: When unsure, never enter personal credentials. Ask Tendrils to inspect the link preview first!
-        """.trimIndent()
-
-        q.contains("study") || q.contains("schedule") -> """
-# Smart Study Routine
-Here is a calm, sustainable study flow for your goals:
-
-- **25 Min Deep Focus:** Silence distractions and tackle the hardest concept first.
-- **5 Min Organic Break:** Stretch, drink water, and rest your eyes away from screens.
-- **Active Recall:** Write down 3 things you remember before opening notes again.
-
-What subject are we focusing on today?
-        """.trimIndent()
-
-        else -> """
-# Great question!
-Here is a helpful breakdown on **$query**:
-
-- **Core Idea:** Understanding this starts with recognizing the foundational principles and how they connect.
-- **Practical Application:** In daily life, this helps solve problems faster and with more clarity.
-- **Next Discovery:** Exploring how this relates to broader subjects like technology and digital literacy.
-
-Feel free to ask a follow-up or choose a suggested topic below!
-        """.trimIndent()
-    }
+    return com.truthlens.llm.LlamatikEngine.generateOnDeviceAnswer(query)
 }
 
 private fun generateFollowUps(query: String): List<String> {
     val q = query.lowercase()
     return when {
-        q.contains("photosynthesis") -> listOf("Why are leaves green?", "How do plant cells differ from animal cells?")
-        q.contains("link") || q.contains("fake") -> listOf("How does HTTPS work?", "What should I do if I clicked a scam link?")
-        q.contains("study") -> listOf("Give me a 1-hour study planner", "How can I prepare for an exam without stress?")
-        else -> listOf("Explain this in simpler terms", "Give me a real-world example", "What are the common mistakes to avoid?")
+        q.contains("search engine") -> listOf("How do web crawlers work?", "How do I spot a fake online link?", "What is PageRank?")
+        q.contains("link") || q.contains("fake") || q.contains("scam") || q.contains("phish") -> listOf("How does HTTPS work?", "What should I do if I clicked a scam link?", "How can I spot a deepfake image?")
+        q.contains("study") || q.contains("schedule") || q.contains("learn") -> listOf("How does spaced repetition work?", "How do search engines work?", "Explain gravity and black holes")
+        q.contains("space") || q.contains("gravity") || q.contains("black hole") -> listOf("What is an event horizon?", "How does solar energy work?", "How do rockets escape Earth?")
+        q.contains("photosynthesis") || q.contains("chlorophyll") -> listOf("Why are leaves green?", "How do plant cells differ from animal cells?")
+        else -> listOf("Explain this in simpler terms", "Give me a real-world example", "How do I spot a fake online link?")
     }
 }

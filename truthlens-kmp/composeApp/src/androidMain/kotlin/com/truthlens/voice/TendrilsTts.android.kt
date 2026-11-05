@@ -63,6 +63,10 @@ actual object TendrilsTts {
     }
 
     actual fun speak(text: String, languageCode: String, pitch: Float, speed: Float) {
+        speakChunk(text = text, flush = true, languageCode = languageCode, pitch = pitch, speed = speed)
+    }
+
+    actual fun speakChunk(text: String, flush: Boolean, languageCode: String, pitch: Float, speed: Float) {
         if (!isReady || tts == null) return
         try {
             val locale = when (languageCode.lowercase()) {
@@ -83,11 +87,12 @@ actual object TendrilsTts {
             tts?.setPitch(effectivePitch)
             tts?.setSpeechRate(effectiveSpeed)
 
-            val utteranceId = "tendrils_${System.currentTimeMillis()}"
+            val utteranceId = "tendrils_${System.nanoTime()}"
             val cleanText = sanitizeForSpeech(text)
 
             if (cleanText.isNotBlank()) {
-                tts?.speak(cleanText, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+                val queueMode = if (flush) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
+                tts?.speak(cleanText, queueMode, null, utteranceId)
                 currentlySpeaking = true
             }
         } catch (e: Exception) {
