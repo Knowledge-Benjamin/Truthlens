@@ -5,7 +5,7 @@ import com.truthlens.ui.App
 fun main() = application {
     Window(
         onCloseRequest = ::exitApplication,
-        title = "TruthLens",
+        title = "Tendrils",
     ) {
         App()
     }

@@ -6,6 +6,8 @@ plugins {
 }
 
 kotlin {
+    jvmToolchain(21)
+
     androidTarget {
         compilations.all {
             kotlinOptions {
@@ -33,6 +35,8 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             
             implementation(libs.voyager.navigator)
+            implementation(libs.voyager.screenmodel)
+            implementation(libs.voyager.tab.navigator)
             implementation(libs.voyager.transitions)
             
             implementation(libs.ktor.client.core)
@@ -40,8 +44,8 @@ kotlin {
             implementation(libs.ktor.serialization.kotlinx.json)
             
             implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.llamatik.core)
-            implementation(libs.llamatik.sdk)
+            // implementation(libs.llamatik.core)
+            // implementation(libs.llamatik.sdk)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -79,10 +83,12 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
-    dependencies {
-        debugImplementation(libs.compose.ui.tooling)
-    }
 }
+
+dependencies {
+    debugImplementation(libs.compose.ui.tooling)
+}
+
 
 compose.desktop {
     application {
