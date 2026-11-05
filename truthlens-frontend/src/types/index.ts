@@ -1,7 +1,7 @@
 export interface DetectionResult {
   id: string
   filename: string
-  fileType: 'image' | 'video'
+  fileType: 'image' | 'video' | 'audio'
   prediction: 'REAL' | 'FAKE' | 'UNCERTAIN'
   confidence: number
   fakeScore: number

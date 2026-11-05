@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import {
-  CheckCircle, AlertTriangle, HelpCircle, Clock, Cpu,
+  CheckCircle, AlertTriangle, HelpCircle, Clock, Cpu, Music,
   BarChart2, ChevronDown, ChevronUp, ShieldCheck, ShieldAlert,
 } from 'lucide-react'
 import { useState } from 'react'
@@ -77,6 +77,11 @@ export default function AnalysisResult({ result, onReset }: Props) {
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className={cn('font-display font-bold text-lg sm:text-2xl', cfg.color)}>{cfg.label}</h3>
               <span className={cfg.badgeClass}>{confidencePercent}% {t.result_confident}</span>
+              {result.fileType === 'audio' && (
+                <span className="flex items-center gap-1 text-xs text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded-full border border-pink-500/20">
+                  <Music size={11} /> Voice Analysis
+                </span>
+              )}
             </div>
             <p className="text-slate-400 text-xs sm:text-sm mt-1">{cfg.sub}</p>
             <p className="text-slate-600 text-xs mt-2 truncate">📁 {result.filename}</p>
@@ -196,7 +201,11 @@ export default function AnalysisResult({ result, onReset }: Props) {
           <AlertTriangle size={16} className="text-warn-400 mt-0.5 shrink-0" />
           <div className="text-sm">
             <p className="text-warn-300 font-medium mb-0.5">{t.result_warn_title}</p>
-            <p className="text-slate-400">{t.result_warn_body}</p>
+            <p className="text-slate-400">
+              {result.fileType === 'audio'
+                ? "This voice sounds AI-generated or cloned. Never trust urgent requests (for money, codes, or personal info) from a voice alone — call back on a known number to confirm."
+                : t.result_warn_body}
+            </p>
           </div>
         </motion.div>
       )}

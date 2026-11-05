@@ -48,11 +48,14 @@ export function isValidMedia(file: File): { valid: boolean; error?: string } {
   const validTypes = [
     'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif',
     'video/mp4', 'video/webm', 'video/avi', 'video/mov', 'video/quicktime',
+    'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-wav', 'audio/wave',
+    'audio/ogg', 'audio/vorbis', 'audio/aac', 'audio/mp4', 'audio/m4a',
+    'audio/flac', 'audio/x-flac', 'audio/webm',
   ]
   const maxSize = 50 * 1024 * 1024 // 50MB
 
   if (!validTypes.includes(file.type)) {
-    return { valid: false, error: 'Unsupported file type. Use JPG, PNG, WebP, MP4, or WebM.' }
+    return { valid: false, error: 'Unsupported file type. Use JPG, PNG, MP4, WebM, MP3, WAV, or OGG.' }
   }
   if (file.size > maxSize) {
     return { valid: false, error: 'File too large. Maximum size is 50MB.' }

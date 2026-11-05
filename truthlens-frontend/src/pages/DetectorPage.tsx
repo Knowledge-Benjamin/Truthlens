@@ -151,10 +151,11 @@ export default function DetectorPage() {
               <ul className="space-y-3">
                 {[
                   { icon: '🎭', title: 'Face swaps', desc: 'Detect GAN-generated face replacements' },
-                  { icon: '🗣️', title: 'Lip sync manipulation', desc: 'Audio-video sync inconsistencies' },
+                  { icon: '🗣️', title: 'Voice cloning', desc: 'AI-synthesised speech & voice fakes' },
                   { icon: '🖼️', title: 'Image synthesis', desc: 'Fully AI-generated images' },
                   { icon: '✂️', title: 'Splicing & editing', desc: 'Cut-and-paste manipulations' },
                   { icon: '🤖', title: 'AI generation', desc: 'Stable Diffusion, DALL·E, Midjourney' },
+                  { icon: '🎵', title: 'Audio deepfakes', desc: 'TTS & voice conversion detection' },
                 ].map(({ icon, title, desc }) => (
                   <li key={title} className="flex items-start gap-3">
                     <span className="text-base leading-none mt-0.5">{icon}</span>
