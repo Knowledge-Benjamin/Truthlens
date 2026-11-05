@@ -21,7 +21,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.truthlens.ui.components.TendrilsCard
+import com.truthlens.ui.model.ExperienceMode
 import com.truthlens.ui.model.LocalOnboardingController
+import com.truthlens.ui.screens.flows.*
 import com.truthlens.ui.screens.profile.*
 import com.truthlens.ui.theme.LocalThemeMode
 import com.truthlens.ui.theme.PillShape
@@ -30,12 +32,14 @@ import com.truthlens.ui.theme.ThemeMode
 
 /**
  * ProfileScreen — User Profile & Settings Hub
- * Milestone 4 Implementation:
- * - Profile header with editable display name
+ * Milestone 4 & 5 Implementation:
+ * - Profile header with editable display name and ExperienceMode
  * - Live System / Light / Dark theme switcher
  * - Detailed sub-screens: Language & Voice, Privacy & Local Data,
+ *   Security & Protection (Background media scanner, C2PA, Phishing),
+ *   Model Manager Lab (downloads/tendrils/models, URL downloader, gated in Child mode),
  *   Permissions overview, Family experience, Accessibility
- * - Replay onboarding test control
+ * - Interactive Feature Flow launch shortcuts (Flows C through H)
  */
 @Composable
 fun ProfileScreen() {
@@ -43,6 +47,7 @@ fun ProfileScreen() {
     val onboardingController = LocalOnboardingController.current
 
     var displayName by remember { mutableStateOf("Explorer") }
+    var selectedExperience by remember { mutableStateOf(ExperienceMode.PERSONAL) }
     var activeDialog by remember { mutableStateOf<String?>(null) }
     var showClearDataConfirmation by remember { mutableStateOf(false) }
 
@@ -120,7 +125,7 @@ fun ProfileScreen() {
                                 .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
                             Text(
-                                text = "Personal Experience Mode",
+                                text = "${selectedExperience.title} Mode",
                                 style = TendrilsTheme.typography.caption,
                                 color = TendrilsTheme.colors.textSecondary,
                                 fontSize = 11.sp
@@ -229,6 +234,13 @@ fun ProfileScreen() {
             ) {
                 Column {
                     SettingsRow(
+                        title = "Security & Protection",
+                        subtitle = "Background media scanner • C2PA • Phishing guard",
+                        icon = Icons.Default.Check,
+                        onClick = { activeDialog = "security" }
+                    )
+                    Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
+                    SettingsRow(
                         title = "Privacy & Local Data",
                         subtitle = "Strictly on-device storage • Local memory",
                         icon = Icons.Default.Check,
@@ -263,12 +275,75 @@ fun ProfileScreen() {
                 backgroundColor = TendrilsTheme.colors.surface,
                 padding = 6.dp
             ) {
-                SettingsRow(
-                    title = "Replay Onboarding Flow",
-                    subtitle = "Re-experience the 5-step welcome & setup",
-                    icon = Icons.Default.Refresh,
-                    onClick = { onboardingController.value = false }
-                )
+                Column {
+                    // Model Manager Lab — hidden / locked in Child Experience Mode
+                    if (selectedExperience != ExperienceMode.CHILD) {
+                        SettingsRow(
+                            title = "Model Manager (Lab)",
+                            subtitle = "Downloads/Tendrils/models • TFLite & GGUF switch",
+                            icon = Icons.Default.Star,
+                            onClick = { activeDialog = "model_manager" }
+                        )
+                        Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
+                    } else {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(imageVector = Icons.Default.Info, contentDescription = null, tint = TendrilsTheme.colors.textMuted, modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text("Model Manager (Lab)", style = TendrilsTheme.typography.body2, fontWeight = FontWeight.SemiBold, color = TendrilsTheme.colors.textMuted)
+                                Text("Locked while in Child Experience Mode", style = TendrilsTheme.typography.caption, color = TendrilsTheme.colors.textMuted)
+                            }
+                        }
+                        Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
+                    }
+
+                    SettingsRow(
+                        title = "Flow D: Deepfake & Image Scan",
+                        subtitle = "TFLite Artifact & Provenance inspection modal",
+                        icon = Icons.Default.Search,
+                        onClick = { activeDialog = "flow_d" }
+                    )
+                    Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
+                    SettingsRow(
+                        title = "Flow E: OCR Document Reader",
+                        subtitle = "Local text extraction & study card generator",
+                        icon = Icons.Default.Info,
+                        onClick = { activeDialog = "flow_e" }
+                    )
+                    Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
+                    SettingsRow(
+                        title = "Flow F: Phishing Link Shield",
+                        subtitle = "Domain reputation & phishing heuristics",
+                        icon = Icons.Default.Check,
+                        onClick = { activeDialog = "flow_f" }
+                    )
+                    Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
+                    SettingsRow(
+                        title = "Flow G: Device Automation Task",
+                        subtitle = "Permission-controlled timer alert automation",
+                        icon = Icons.Default.Refresh,
+                        onClick = { activeDialog = "flow_g" }
+                    )
+                    Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
+                    SettingsRow(
+                        title = "Flow H: Family Device Pairing",
+                        subtitle = "Pairing code & transparent privacy controls",
+                        icon = Icons.Default.Person,
+                        onClick = { activeDialog = "flow_h" }
+                    )
+                    Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
+                    SettingsRow(
+                        title = "Replay Onboarding Flow",
+                        subtitle = "Re-experience the 5-step welcome & setup",
+                        icon = Icons.Default.Refresh,
+                        onClick = { onboardingController.value = false }
+                    )
+                }
             }
 
             // --- ABOUT ---
@@ -286,7 +361,7 @@ fun ProfileScreen() {
                         color = TendrilsTheme.colors.textPrimary
                     )
                     Text(
-                        text = "Milestone 4: Personal Area • UI/UX Foundation",
+                        text = "Milestone 5: Flows, Security & Model Manager Lab",
                         style = TendrilsTheme.typography.caption,
                         fontWeight = FontWeight.Bold,
                         color = TendrilsTheme.colors.primary
@@ -307,10 +382,33 @@ fun ProfileScreen() {
     when (activeDialog) {
         "edit_profile" -> EditProfileDialog(
             currentName = displayName,
+            currentExperience = selectedExperience,
             onSaveName = { displayName = it },
+            onSaveExperience = { selectedExperience = it },
             onDismiss = { activeDialog = null }
         )
         "language_voice" -> LanguageVoiceSettingsDialog(
+            onDismiss = { activeDialog = null }
+        )
+        "security" -> SecuritySettingsDialog(
+            onDismiss = { activeDialog = null }
+        )
+        "model_manager" -> ModelManagerDialog(
+            onDismiss = { activeDialog = null }
+        )
+        "flow_d" -> FlowDImageUnderstandingDialog(
+            onDismiss = { activeDialog = null }
+        )
+        "flow_e" -> FlowEOcrReaderDialog(
+            onDismiss = { activeDialog = null }
+        )
+        "flow_f" -> FlowFLinkSafetyDialog(
+            onDismiss = { activeDialog = null }
+        )
+        "flow_g" -> FlowGDeviceTaskDialog(
+            onDismiss = { activeDialog = null }
+        )
+        "flow_h" -> FlowHFamilyPairingDialog(
             onDismiss = { activeDialog = null }
         )
         "privacy" -> PrivacySettingsDialog(

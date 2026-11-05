@@ -30,6 +30,7 @@ import com.truthlens.ui.components.TendrilsCard
 import com.truthlens.ui.model.ChatMessage
 import com.truthlens.ui.model.CompanionState
 import com.truthlens.ui.navigation.ProfileTab
+import com.truthlens.ui.screens.flows.*
 import com.truthlens.ui.theme.PillShape
 import com.truthlens.ui.theme.TendrilsPalette
 import com.truthlens.ui.theme.TendrilsTheme
@@ -55,6 +56,7 @@ fun HomeScreen() {
     var companionState by remember { mutableStateOf(CompanionState.IDLE) }
     var inputText by remember { mutableStateOf("") }
     var showAttachmentSheet by remember { mutableStateOf(false) }
+    var activeFlowModal by remember { mutableStateOf<String?>(null) }
 
     // Conversation state
     var messages by remember {
@@ -369,22 +371,30 @@ fun HomeScreen() {
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "Choose an item for Tendrils to understand or inspect:",
+                        text = "Choose an item for Tendrils to understand, inspect, or automate:",
                         style = TendrilsTheme.typography.body2,
                         color = TendrilsTheme.colors.textSecondary
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    AttachmentOption("Image or Photograph", "Flow D • Image understanding preview", Icons.Default.Search) {
+                    AttachmentOption("Image or Photograph", "Flow D • Deepfake scan & C2PA check", Icons.Default.Search) {
                         showAttachmentSheet = false
-                        onSendMessage("I've shared an image. Can you analyze what's happening?")
+                        activeFlowModal = "flow_d"
                     }
-                    AttachmentOption("Document or Article", "Flow E • Summarise text & key insights", Icons.Default.Info) {
+                    AttachmentOption("Document or Article", "Flow E • OCR text reader & study card", Icons.Default.Info) {
                         showAttachmentSheet = false
-                        onSendMessage("Can you read this document and give me the summary?")
+                        activeFlowModal = "flow_e"
                     }
-                    AttachmentOption("Web Link or Message", "Flow F • Digital safety check", Icons.Default.Check) {
+                    AttachmentOption("Web Link or Message", "Flow F • Phishing & safety shield", Icons.Default.Check) {
                         showAttachmentSheet = false
-                        onSendMessage("Please check this link: https://safety-sample.org")
+                        activeFlowModal = "flow_f"
+                    }
+                    AttachmentOption("Subject Learning", "Flow C • Interactive explanation depth", Icons.Default.Star) {
+                        showAttachmentSheet = false
+                        activeFlowModal = "flow_c"
+                    }
+                    AttachmentOption("Device Task or Routine", "Flow G • Scheduled alert automation", Icons.Default.Refresh) {
+                        showAttachmentSheet = false
+                        activeFlowModal = "flow_g"
                     }
                 }
             },
@@ -402,6 +412,29 @@ fun HomeScreen() {
             },
             backgroundColor = TendrilsTheme.colors.surface,
             shape = TendrilsTheme.shapes.medium
+        )
+    }
+
+    // Interactive Flow Modals
+    when (activeFlowModal) {
+        "flow_c" -> FlowCLearningDialog(
+            onDismiss = { activeFlowModal = null },
+            onSendToChat = { onSendMessage(it) }
+        )
+        "flow_d" -> FlowDImageUnderstandingDialog(
+            onDismiss = { activeFlowModal = null },
+            onSendToChat = { onSendMessage(it) }
+        )
+        "flow_e" -> FlowEOcrReaderDialog(
+            onDismiss = { activeFlowModal = null },
+            onSendToChat = { onSendMessage(it) }
+        )
+        "flow_f" -> FlowFLinkSafetyDialog(
+            onDismiss = { activeFlowModal = null },
+            onSendToChat = { onSendMessage(it) }
+        )
+        "flow_g" -> FlowGDeviceTaskDialog(
+            onDismiss = { activeFlowModal = null }
         )
     }
 }

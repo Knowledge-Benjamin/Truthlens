@@ -386,10 +386,13 @@ fun AccessibilitySettingsDialog(onDismiss: () -> Unit) {
 @Composable
 fun EditProfileDialog(
     currentName: String,
+    currentExperience: com.truthlens.ui.model.ExperienceMode = com.truthlens.ui.model.ExperienceMode.PERSONAL,
     onSaveName: (String) -> Unit,
+    onSaveExperience: (com.truthlens.ui.model.ExperienceMode) -> Unit = {},
     onDismiss: () -> Unit
 ) {
     var nameInput by remember { mutableStateOf(currentName) }
+    var experienceInput by remember { mutableStateOf(currentExperience) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -397,7 +400,12 @@ fun EditProfileDialog(
             Text("Edit Profile", style = TendrilsTheme.typography.h3, color = TendrilsTheme.colors.textPrimary)
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 Text(
                     text = "Choose the display name Tendrils uses when greeting you.",
                     style = TendrilsTheme.typography.body2,
@@ -412,8 +420,51 @@ fun EditProfileDialog(
                         focusedBorderColor = TendrilsTheme.colors.primary,
                         unfocusedBorderColor = TendrilsTheme.colors.border
                     ),
-                    singleLine = true
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
                 )
+
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Experience Mode",
+                    style = TendrilsTheme.typography.subtitle1,
+                    fontWeight = FontWeight.SemiBold,
+                    color = TendrilsTheme.colors.textPrimary
+                )
+
+                com.truthlens.ui.model.ExperienceMode.entries.forEach { mode ->
+                    val isSelected = experienceInput == mode
+                    TendrilsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        backgroundColor = if (isSelected) TendrilsTheme.colors.primary.copy(alpha = 0.12f) else TendrilsTheme.colors.surfaceElevated,
+                        borderColor = if (isSelected) TendrilsTheme.colors.primary else TendrilsTheme.colors.border,
+                        padding = 10.dp,
+                        onClick = { experienceInput = mode }
+                    ) {
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = mode.title,
+                                    style = TendrilsTheme.typography.body2,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (isSelected) TendrilsTheme.colors.primary else TendrilsTheme.colors.textPrimary
+                                )
+                                if (isSelected) {
+                                    Icon(imageVector = Icons.Default.Check, contentDescription = null, tint = TendrilsTheme.colors.primary, modifier = Modifier.size(16.dp))
+                                }
+                            }
+                            Text(
+                                text = mode.subtitle,
+                                style = TendrilsTheme.typography.caption,
+                                color = TendrilsTheme.colors.textMuted
+                            )
+                        }
+                    }
+                }
             }
         },
         buttons = {
@@ -431,8 +482,9 @@ fun EditProfileDialog(
                     onClick = {
                         if (nameInput.isNotBlank()) {
                             onSaveName(nameInput.trim())
-                            onDismiss()
                         }
+                        onSaveExperience(experienceInput)
+                        onDismiss()
                     },
                     shape = PillShape,
                     colors = ButtonDefaults.buttonColors(
