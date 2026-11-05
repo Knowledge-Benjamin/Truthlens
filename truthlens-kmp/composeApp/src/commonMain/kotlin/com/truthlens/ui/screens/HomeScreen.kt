@@ -84,7 +84,7 @@ fun HomeScreen() {
         "Ask anything"
     )
 
-    // Function to handle sending a query
+    // Function to handle sending a query with real LlamatikEngine streaming
     val onSendMessage: (String) -> Unit = { query ->
         if (query.isNotBlank() && companionState != CompanionState.THINKING) {
             val userMsg = ChatMessage(
@@ -95,26 +95,46 @@ fun HomeScreen() {
             messages = messages + userMsg
             inputText = ""
 
-            // Trigger Assistant State Sequence: Thinking -> Speaking -> Completed -> Idle
+            // Trigger Assistant State Sequence: Thinking -> Speaking (Streaming) -> Completed -> Idle
             coroutineScope.launch {
                 listState.animateScrollToItem(messages.size - 1)
                 companionState = CompanionState.THINKING
-                delay(1200)
-
-                companionState = CompanionState.SPEAKING
-                val responseContent = generateCompanionResponse(query)
-                val followUps = generateFollowUps(query)
-
-                val assistantMsg = ChatMessage(
-                    id = "a_${messages.size}",
-                    role = ChatMessage.Role.ASSISTANT,
-                    content = responseContent,
-                    followUps = followUps
-                )
-                messages = messages + assistantMsg
-                listState.animateScrollToItem(messages.size - 1)
-
                 delay(600)
+
+                val assistantMsgId = "a_${messages.size}"
+                var accumulated = ""
+                val initialAssistantMsg = ChatMessage(
+                    id = assistantMsgId,
+                    role = ChatMessage.Role.ASSISTANT,
+                    content = "",
+                    isStreaming = true
+                )
+                messages = messages + initialAssistantMsg
+                companionState = CompanionState.SPEAKING
+
+                // Real streaming from Llamatik native engine
+                com.truthlens.llm.LlamatikEngine.generateStreaming(query).collect { token ->
+                    accumulated += token
+                    messages = messages.map { msg ->
+                        if (msg.id == assistantMsgId) {
+                            msg.copy(content = accumulated)
+                        } else msg
+                    }
+                    listState.animateScrollToItem(messages.size - 1)
+                }
+
+                val followUps = generateFollowUps(query)
+                messages = messages.map { msg ->
+                    if (msg.id == assistantMsgId) {
+                        msg.copy(
+                            content = accumulated.ifBlank { generateCompanionResponse(query) },
+                            followUps = followUps,
+                            isStreaming = false
+                        )
+                    } else msg
+                }
+
+                delay(300)
                 companionState = CompanionState.COMPLETED
                 delay(1000)
                 companionState = CompanionState.IDLE

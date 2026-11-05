@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.truthlens.ai.*
 import com.truthlens.ui.components.TendrilsCard
 import com.truthlens.ui.theme.PillShape
 import com.truthlens.ui.theme.TendrilsPalette
@@ -220,7 +221,7 @@ fun FlowDImageUnderstandingDialog(
     var selectedAction by remember { mutableStateOf("Deepfake & Artifact Scan") }
     var isScanning by remember { mutableStateOf(false) }
     var scanProgress by remember { mutableStateOf(0f) }
-    var analysisResult by remember { mutableStateOf<Boolean?>(null) }
+    var tfliteResult by remember { mutableStateOf<TfliteInspectionResult?>(null) }
     val scope = rememberCoroutineScope()
 
     FlowModalDialog(
@@ -245,7 +246,7 @@ fun FlowDImageUnderstandingDialog(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(selectedSample, style = TendrilsTheme.typography.body2, fontWeight = FontWeight.SemiBold, color = TendrilsTheme.colors.textPrimary)
-                    Text("In-Memory Buffer • 2.4 MB • JPEG", style = TendrilsTheme.typography.caption, color = TendrilsTheme.colors.textMuted)
+                    Text("In-Memory Buffer • 2.4 MB • JPEG • TFLite Ready", style = TendrilsTheme.typography.caption, color = TendrilsTheme.colors.textMuted)
                 }
             }
         }
@@ -273,14 +274,13 @@ fun FlowDImageUnderstandingDialog(
             onClick = {
                 scope.launch {
                     isScanning = true
-                    scanProgress = 0.2f
-                    delay(300)
-                    scanProgress = 0.6f
-                    delay(400)
-                    scanProgress = 1.0f
+                    scanProgress = 0.3f
                     delay(200)
+                    val result = NativeAiBridge.runTfliteInspection(selectedSample)
+                    scanProgress = 1.0f
+                    delay(150)
                     isScanning = false
-                    analysisResult = true // simulated authentic with provenance
+                    tfliteResult = result
                 }
             },
             modifier = Modifier.fillMaxWidth().height(48.dp),
@@ -288,7 +288,7 @@ fun FlowDImageUnderstandingDialog(
             colors = ButtonDefaults.buttonColors(backgroundColor = TendrilsPalette.Sprout500, contentColor = Color.White)
         ) {
             if (isScanning) {
-                Text("Analyzing Facial Boundaries (${(scanProgress * 100).toInt()}%)...")
+                Text("Executing TFLite Interpreter...")
             } else {
                 Text("Run $selectedAction")
             }
@@ -298,26 +298,37 @@ fun FlowDImageUnderstandingDialog(
             LinearProgressIndicator(progress = scanProgress, modifier = Modifier.fillMaxWidth().clip(PillShape), color = TendrilsTheme.colors.primary)
         }
 
-        analysisResult?.let {
+        tfliteResult?.let { res ->
+            val isFake = res.isDeepfake
+            val borderColor = if (isFake) TendrilsPalette.Coral500 else TendrilsPalette.Emerald400
             TendrilsCard(
                 modifier = Modifier.fillMaxWidth(),
                 backgroundColor = TendrilsTheme.colors.surfaceElevated,
-                borderColor = TendrilsPalette.Emerald400,
+                borderColor = borderColor,
                 borderWidth = 1.5.dp,
                 padding = 14.dp
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(TendrilsPalette.Emerald400))
+                        Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(borderColor))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Verdict: LIKELY AUTHENTIC (92% Confidence)", style = TendrilsTheme.typography.caption, fontWeight = FontWeight.Bold, color = TendrilsPalette.Emerald400)
+                        Text(
+                            text = if (isFake) "Verdict: DEEPFAKE ARTIFACTS FOUND (${(res.fakeProbability * 100).toInt()}% Confidence)" else "Verdict: LIKELY AUTHENTIC",
+                            style = TendrilsTheme.typography.caption,
+                            fontWeight = FontWeight.Bold,
+                            color = borderColor
+                        )
                     }
                     Divider(color = TendrilsTheme.colors.border)
-                    Text("• Lighting Consistency: 94% (Natural shadow cast across cheekbones)", style = TendrilsTheme.typography.caption, color = TendrilsTheme.colors.textSecondary)
-                    Text("• Boundary Warping: 0.04 (No diffusion blending artifacts found)", style = TendrilsTheme.typography.caption, color = TendrilsTheme.colors.textSecondary)
-                    Text("• C2PA Manifest: Valid camera origin metadata detected", style = TendrilsTheme.typography.caption, color = TendrilsTheme.colors.textSecondary)
+                    Text("• TFLite Summary: ${res.summary}", style = TendrilsTheme.typography.caption, color = TendrilsTheme.colors.textSecondary)
+                    Text("• Execution Time: ${res.executionTimeMs} ms on-device", style = TendrilsTheme.typography.caption, color = TendrilsTheme.colors.primary)
+                    Text("• C2PA Signature: ${if (res.c2paVerified) "Verified Camera Signature" else "No Hardware C2PA Manifest (Standard Export)"}", style = TendrilsTheme.typography.caption, color = TendrilsTheme.colors.textSecondary)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text("Kid-Friendly Guidance: This photo shows natural lighting and clear digital origin. Always look at the source publisher when viewing news media.", style = TendrilsTheme.typography.caption, color = TendrilsTheme.colors.textMuted)
+                    Text(
+                        text = "Kid-Friendly Guidance: Artificial images often have tiny irregular glitches around eyes and hair. Tendrils runs on-device TFLite to help you verify before sharing.",
+                        style = TendrilsTheme.typography.caption,
+                        color = TendrilsTheme.colors.textMuted
+                    )
                 }
             }
         }
@@ -335,12 +346,13 @@ fun FlowEOcrReaderDialog(
 ) {
     var isProcessing by remember { mutableStateOf(false) }
     var extractedText by remember { mutableStateOf<String?>(null) }
+    var ocrMetrics by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
     FlowModalDialog(
         title = "OCR & Document Reader (Flow E)",
         subtitle = "On-Device Google ML Kit Text Recognition",
-        icon = Icons.Default.List,
+        icon = Icons.Default.Info,
         onDismiss = onDismiss
     ) {
         TendrilsCard(
@@ -350,7 +362,7 @@ fun FlowEOcrReaderDialog(
         ) {
             Column {
                 Text("Selected Source: science_notes_ch4.pdf", style = TendrilsTheme.typography.body2, fontWeight = FontWeight.SemiBold, color = TendrilsTheme.colors.textPrimary)
-                Text("Target: Read handwritten and printed study text", style = TendrilsTheme.typography.caption, color = TendrilsTheme.colors.textMuted)
+                Text("Target: Real on-device Google ML Kit Vision text recognizer", style = TendrilsTheme.typography.caption, color = TendrilsTheme.colors.textMuted)
             }
         }
 
@@ -358,14 +370,10 @@ fun FlowEOcrReaderDialog(
             onClick = {
                 scope.launch {
                     isProcessing = true
-                    delay(700)
+                    val ocr = NativeAiBridge.runOcrExtraction("science_notes_ch4.pdf")
                     isProcessing = false
-                    extractedText = """
-ENERGY CONSERVATION PRINCIPLES (Chapter 4)
-- Total energy in an isolated system remains constant.
-- Energy cannot be created or destroyed; it transforms from one form into another (e.g. Chemical to Thermal).
-- Formula: ΔE = Q - W (First Law of Thermodynamics)
-                    """.trimIndent()
+                    extractedText = ocr.extractedText
+                    ocrMetrics = "ML Kit Engine: Extracted ${ocr.blockCount} blocks (${ocr.lineCount} lines) in ${ocr.executionTimeMs} ms"
                 }
             },
             modifier = Modifier.fillMaxWidth().height(48.dp),
@@ -375,9 +383,9 @@ ENERGY CONSERVATION PRINCIPLES (Chapter 4)
             if (isProcessing) {
                 CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Extracting Text...")
+                Text("Running ML Kit OCR...")
             } else {
-                Text("Read Text & Summarise")
+                Text("Extract Text with ML Kit")
             }
         }
 
@@ -389,7 +397,16 @@ ENERGY CONSERVATION PRINCIPLES (Chapter 4)
                 padding = 14.dp
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("Extracted Text:", style = TendrilsTheme.typography.caption, fontWeight = FontWeight.Bold, color = TendrilsTheme.colors.primary)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Extracted Text:", style = TendrilsTheme.typography.caption, fontWeight = FontWeight.Bold, color = TendrilsTheme.colors.primary)
+                        ocrMetrics?.let {
+                            Text(it, style = TendrilsTheme.typography.caption, color = TendrilsTheme.colors.textMuted, fontSize = 10.sp)
+                        }
+                    }
                     Text(text, style = TendrilsTheme.typography.body2, color = TendrilsTheme.colors.textPrimary)
                     Spacer(modifier = Modifier.height(4.dp))
                     Button(

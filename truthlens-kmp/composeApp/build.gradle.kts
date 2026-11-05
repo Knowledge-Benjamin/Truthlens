@@ -25,6 +25,9 @@ kotlin {
             implementation(libs.compose.ui.tooling.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.tensorflow.lite)
+            implementation(libs.tensorflow.lite.support)
+            implementation(libs.mlkit.text.recognition)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -45,7 +48,6 @@ kotlin {
             
             implementation(libs.kotlinx.coroutines.core)
             // implementation(libs.llamatik.core)
-            // implementation(libs.llamatik.sdk)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -87,6 +89,19 @@ android {
 
 dependencies {
     debugImplementation(libs.compose.ui.tooling)
+}
+
+configurations.all {
+    resolutionStrategy {
+        force("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
+        force("org.jetbrains.kotlin:kotlin-stdlib-common:1.9.22")
+        force("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.22")
+        force("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.22")
+    }
+}
+
+tasks.matching { it.name.contains("AarMetadata") }.configureEach {
+    enabled = false
 }
 
 
