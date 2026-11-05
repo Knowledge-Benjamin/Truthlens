@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,19 +21,30 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.truthlens.ui.components.TendrilsCard
+import com.truthlens.ui.model.LocalOnboardingController
+import com.truthlens.ui.screens.profile.*
 import com.truthlens.ui.theme.LocalThemeMode
 import com.truthlens.ui.theme.PillShape
-import com.truthlens.ui.theme.TendrilsPalette
 import com.truthlens.ui.theme.TendrilsTheme
 import com.truthlens.ui.theme.ThemeMode
 
 /**
- * ProfileScreen — User profile, interactive appearance switcher,
- * and organized settings destinations.
+ * ProfileScreen — User Profile & Settings Hub
+ * Milestone 4 Implementation:
+ * - Profile header with editable display name
+ * - Live System / Light / Dark theme switcher
+ * - Detailed sub-screens: Language & Voice, Privacy & Local Data,
+ *   Permissions overview, Family experience, Accessibility
+ * - Replay onboarding test control
  */
 @Composable
 fun ProfileScreen() {
     val themeModeState = LocalThemeMode.current
+    val onboardingController = LocalOnboardingController.current
+
+    var displayName by remember { mutableStateOf("Explorer") }
+    var activeDialog by remember { mutableStateOf<String?>(null) }
+    var showClearDataConfirmation by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -44,15 +56,16 @@ fun ProfileScreen() {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .padding(horizontal = 20.dp, vertical = 14.dp)
         ) {
             Text(
-                text = "Profile",
+                text = "Profile & Settings",
                 style = TendrilsTheme.typography.h1,
                 color = TendrilsTheme.colors.textPrimary
             )
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = "Manage your preferences & companion experience",
+                text = "Personalise your companion and manage preferences",
                 style = TendrilsTheme.typography.body2,
                 color = TendrilsTheme.colors.textSecondary
             )
@@ -66,33 +79,37 @@ fun ProfileScreen() {
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // User Card
+            // User Header Card
             TendrilsCard(
                 modifier = Modifier.fillMaxWidth(),
                 backgroundColor = TendrilsTheme.colors.surface,
-                padding = 18.dp
+                padding = 16.dp,
+                onClick = { activeDialog = "edit_profile" }
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Box(
                         modifier = Modifier
-                            .size(54.dp)
+                            .size(56.dp)
                             .clip(CircleShape)
                             .background(TendrilsTheme.colors.primary.copy(alpha = 0.2f))
                             .border(2.dp, TendrilsTheme.colors.primary, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "E",
+                            text = displayName.take(1).uppercase(),
                             style = TendrilsTheme.typography.h2,
                             color = TendrilsTheme.colors.primary
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(16.dp))
+                    Spacer(modifier = Modifier.width(14.dp))
 
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Explorer",
+                            text = displayName,
                             style = TendrilsTheme.typography.h3,
                             color = TendrilsTheme.colors.textPrimary
                         )
@@ -103,11 +120,21 @@ fun ProfileScreen() {
                                 .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
                             Text(
-                                text = "Personal Experience",
+                                text = "Personal Experience Mode",
                                 style = TendrilsTheme.typography.caption,
-                                color = TendrilsTheme.colors.textSecondary
+                                color = TendrilsTheme.colors.textSecondary,
+                                fontSize = 11.sp
                             )
                         }
+                    }
+
+                    IconButton(onClick = { activeDialog = "edit_profile" }) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit name",
+                            tint = TendrilsTheme.colors.textMuted,
+                            modifier = Modifier.size(18.dp)
+                        )
                     }
                 }
             }
@@ -126,7 +153,7 @@ fun ProfileScreen() {
             ) {
                 Column {
                     Text(
-                        text = "Choose Theme",
+                        text = "Theme Selection",
                         style = TendrilsTheme.typography.subtitle1,
                         fontWeight = FontWeight.SemiBold,
                         color = TendrilsTheme.colors.textPrimary
@@ -159,9 +186,9 @@ fun ProfileScreen() {
                 }
             }
 
-            // --- SETTINGS GROUPS ---
+            // --- PREFERENCES GROUP ---
             Text(
-                text = "Preferences & Privacy",
+                text = "Companion Preferences",
                 style = TendrilsTheme.typography.h3,
                 color = TendrilsTheme.colors.textPrimary
             )
@@ -169,25 +196,79 @@ fun ProfileScreen() {
             TendrilsCard(
                 modifier = Modifier.fillMaxWidth(),
                 backgroundColor = TendrilsTheme.colors.surface,
-                padding = 8.dp
+                padding = 6.dp
             ) {
                 Column {
-                    SettingsRowItem("Language and Voice", "English • Gentle voice", Icons.Default.Info)
+                    SettingsRow(
+                        title = "Language and Voice",
+                        subtitle = "English • Gentle Sprout voice • 1.0x",
+                        icon = Icons.Default.Info,
+                        onClick = { activeDialog = "language_voice" }
+                    )
                     Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
-                    SettingsRowItem("Privacy & Local Data", "Files kept strictly on-device", Icons.Default.Check)
-                    Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
-                    SettingsRowItem("Permissions", "Camera, Mic, Notifications", Icons.Default.Star)
-                    Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
-                    SettingsRowItem("Family Settings", "Optional pairing for kids & teens", Icons.Default.Person)
-                    Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
-                    val onboardingController = com.truthlens.ui.model.LocalOnboardingController.current
-                    SettingsRowItem(
-                        title = "Replay Onboarding",
-                        subtitle = "Test 5-step welcome and setup experience",
-                        icon = Icons.Default.Refresh,
-                        onClick = { onboardingController.value = false }
+                    SettingsRow(
+                        title = "Accessibility",
+                        subtitle = "Text scale, reduced motion, contrast",
+                        icon = Icons.Default.Favorite,
+                        onClick = { activeDialog = "accessibility" }
                     )
                 }
+            }
+
+            // --- PRIVACY & PERMISSIONS GROUP ---
+            Text(
+                text = "Privacy & Safety",
+                style = TendrilsTheme.typography.h3,
+                color = TendrilsTheme.colors.textPrimary
+            )
+
+            TendrilsCard(
+                modifier = Modifier.fillMaxWidth(),
+                backgroundColor = TendrilsTheme.colors.surface,
+                padding = 6.dp
+            ) {
+                Column {
+                    SettingsRow(
+                        title = "Privacy & Local Data",
+                        subtitle = "Strictly on-device storage • Local memory",
+                        icon = Icons.Default.Check,
+                        onClick = { activeDialog = "privacy" }
+                    )
+                    Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
+                    SettingsRow(
+                        title = "System Permissions",
+                        subtitle = "Camera, Mic, Files (On-demand only)",
+                        icon = Icons.Default.Star,
+                        onClick = { activeDialog = "permissions" }
+                    )
+                    Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
+                    SettingsRow(
+                        title = "Family Experience",
+                        subtitle = "Transparent parental guidance without tracking",
+                        icon = Icons.Default.Person,
+                        onClick = { activeDialog = "family" }
+                    )
+                }
+            }
+
+            // --- TESTING & DEMONSTRATION TOOLS ---
+            Text(
+                text = "Testing & Flows",
+                style = TendrilsTheme.typography.h3,
+                color = TendrilsTheme.colors.textPrimary
+            )
+
+            TendrilsCard(
+                modifier = Modifier.fillMaxWidth(),
+                backgroundColor = TendrilsTheme.colors.surface,
+                padding = 6.dp
+            ) {
+                SettingsRow(
+                    title = "Replay Onboarding Flow",
+                    subtitle = "Re-experience the 5-step welcome & setup",
+                    icon = Icons.Default.Refresh,
+                    onClick = { onboardingController.value = false }
+                )
             }
 
             // --- ABOUT ---
@@ -197,16 +278,21 @@ fun ProfileScreen() {
                 borderColor = TendrilsTheme.colors.border,
                 padding = 16.dp
             ) {
-                Column {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = "Tendrils AI Companion",
+                        text = "Tendrils Personal AI Companion",
                         style = TendrilsTheme.typography.subtitle1,
                         fontWeight = FontWeight.SemiBold,
                         color = TendrilsTheme.colors.textPrimary
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Version 1.0.0-alpha • Milestone 2 (Core Experience & States)",
+                        text = "Milestone 4: Personal Area • UI/UX Foundation",
+                        style = TendrilsTheme.typography.caption,
+                        fontWeight = FontWeight.Bold,
+                        color = TendrilsTheme.colors.primary
+                    )
+                    Text(
+                        text = "Built with Kotlin Multiplatform and Compose. Files and memory are stored strictly on-device.",
                         style = TendrilsTheme.typography.caption,
                         color = TendrilsTheme.colors.textMuted
                     )
@@ -215,6 +301,68 @@ fun ProfileScreen() {
 
             Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+
+    // --- SUB-SCREEN DIALOGS ---
+    when (activeDialog) {
+        "edit_profile" -> EditProfileDialog(
+            currentName = displayName,
+            onSaveName = { displayName = it },
+            onDismiss = { activeDialog = null }
+        )
+        "language_voice" -> LanguageVoiceSettingsDialog(
+            onDismiss = { activeDialog = null }
+        )
+        "privacy" -> PrivacySettingsDialog(
+            onDismiss = { activeDialog = null },
+            onClearAllData = {
+                activeDialog = null
+                showClearDataConfirmation = true
+            }
+        )
+        "permissions" -> PermissionsSettingsDialog(
+            onDismiss = { activeDialog = null }
+        )
+        "family" -> FamilySettingsDialog(
+            onDismiss = { activeDialog = null }
+        )
+        "accessibility" -> AccessibilitySettingsDialog(
+            onDismiss = { activeDialog = null }
+        )
+    }
+
+    // Confirmation dialog for data clear
+    if (showClearDataConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showClearDataConfirmation = false },
+            title = { Text("Clear All Local Data?", style = TendrilsTheme.typography.h3, color = TendrilsTheme.colors.textPrimary) },
+            text = {
+                Text(
+                    "This will delete all locally stored conversation history, learning progress, and personal preferences from this device.",
+                    style = TendrilsTheme.typography.body2,
+                    color = TendrilsTheme.colors.textSecondary
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showClearDataConfirmation = false },
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = MaterialTheme.colors.error,
+                        contentColor = Color.White
+                    ),
+                    shape = PillShape
+                ) {
+                    Text("Clear Everything")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearDataConfirmation = false }) {
+                    Text("Cancel", color = TendrilsTheme.colors.textMuted)
+                }
+            },
+            backgroundColor = TendrilsTheme.colors.surface,
+            shape = TendrilsTheme.shapes.medium
+        )
     }
 }
 
@@ -248,17 +396,17 @@ private fun ThemeOptionChip(
 }
 
 @Composable
-private fun SettingsRowItem(
+private fun SettingsRow(
     title: String,
     subtitle: String,
     icon: ImageVector,
-    onClick: (() -> Unit)? = null
+    onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick?.invoke() }
-            .padding(horizontal = 12.dp, vertical = 12.dp),
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -267,11 +415,12 @@ private fun SettingsRowItem(
             tint = TendrilsTheme.colors.primary,
             modifier = Modifier.size(20.dp)
         )
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
                 style = TendrilsTheme.typography.body1,
+                fontWeight = FontWeight.SemiBold,
                 color = TendrilsTheme.colors.textPrimary
             )
             Text(
@@ -281,7 +430,7 @@ private fun SettingsRowItem(
             )
         }
         Icon(
-            imageVector = Icons.Default.ArrowForward,
+            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
             contentDescription = null,
             tint = TendrilsTheme.colors.textMuted,
             modifier = Modifier.size(16.dp)
