@@ -41,67 +41,27 @@ fun CompanionAvatar(
 ) {
     var showStateMenu by remember { mutableStateOf(false) }
 
-    // Subtle scale animation only active during dynamic states (Listening, Thinking, Speaking, Task)
-    val isDynamicState = state == CompanionState.LISTENING ||
-            state == CompanionState.THINKING ||
-            state == CompanionState.SPEAKING ||
-            state == CompanionState.PERFORMING_TASK
-
-    val infiniteTransition = rememberInfiniteTransition()
-    val pulseScale by if (isDynamicState) {
-        infiniteTransition.animateFloat(
-            initialValue = 1.0f,
-            targetValue = 1.06f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(1100, easing = FastOutSlowInEasing),
-                repeatMode = RepeatMode.Reverse
-            )
-        )
-    } else {
-        remember { mutableStateOf(1.0f) }
-    }
-
     val animatedPrimaryColor by animateColorAsState(
         targetValue = state.primaryColor,
         animationSpec = tween(400)
     )
 
-    val animatedAuraColor by animateColorAsState(
-        targetValue = state.auraColor,
-        animationSpec = tween(400)
-    )
 
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // --- MULTI-LAYER ORGANIC ORB ---
+        // --- LIVING BOTANICAL ORGANSIM VISUAL ---
         Box(
             modifier = Modifier
-                .size(136.dp)
-                .scale(pulseScale)
-                .clip(CircleShape)
-                .background(animatedAuraColor)
-                .border(2.dp, animatedPrimaryColor.copy(alpha = 0.5f), CircleShape)
+                .size(144.dp)
                 .clickable { showStateMenu = true },
             contentAlignment = Alignment.Center
         ) {
-            // Inner Core Circle
-            Box(
-                modifier = Modifier
-                    .size(96.dp)
-                    .clip(CircleShape)
-                    .background(TendrilsTheme.colors.surface)
-                    .border(1.5.dp, animatedPrimaryColor.copy(alpha = 0.8f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = getIconForState(state),
-                    contentDescription = state.label,
-                    tint = animatedPrimaryColor,
-                    modifier = Modifier.size(44.dp)
-                )
-            }
+            TendrilOrganism(
+                state = state,
+                size = 144.dp
+            )
         }
 
         Spacer(modifier = Modifier.height(14.dp))
