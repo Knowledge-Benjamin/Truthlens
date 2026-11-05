@@ -15,7 +15,17 @@ data class OcrExtractionResult(
     val executionTimeMs: Long
 )
 
+data class VisionAnalysisResult(
+    val detectedObjects: List<String>,
+    val sceneDescription: String,
+    val extractedText: String?,
+    val isAuthentic: Boolean,
+    val confidence: Float,
+    val executionTimeMs: Long
+)
+
 expect object NativeAiBridge {
     suspend fun runTfliteInspection(mediaName: String): TfliteInspectionResult
     suspend fun runOcrExtraction(documentName: String): OcrExtractionResult
+    suspend fun runVisionAnalysis(imageName: String): VisionAnalysisResult
 }

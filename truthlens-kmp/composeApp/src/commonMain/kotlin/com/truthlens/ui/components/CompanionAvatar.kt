@@ -142,6 +142,33 @@ fun CompanionAvatar(
             color = TendrilsTheme.colors.textSecondary,
             textAlign = TextAlign.Center
         )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // 5 Botanical Avatar Archetype Selector Pills
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AvatarArchetype.entries.forEach { arc ->
+                val isSel = AvatarManager.selectedArchetype == arc
+                Box(
+                    modifier = Modifier
+                        .clip(PillShape)
+                        .background(if (isSel) animatedPrimaryColor.copy(alpha = 0.20f) else TendrilsTheme.colors.surface)
+                        .border(1.dp, if (isSel) animatedPrimaryColor else TendrilsTheme.colors.border, PillShape)
+                        .clickable { AvatarManager.selectedArchetype = arc }
+                        .padding(horizontal = 9.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = arc.tag,
+                        style = TendrilsTheme.typography.caption,
+                        fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSel) animatedPrimaryColor else TendrilsTheme.colors.textMuted
+                    )
+                }
+            }
+        }
     }
 }
 

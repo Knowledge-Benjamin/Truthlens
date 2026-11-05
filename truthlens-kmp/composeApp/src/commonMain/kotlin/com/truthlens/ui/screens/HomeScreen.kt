@@ -97,51 +97,56 @@ fun HomeScreen() {
 
             // Trigger Assistant State Sequence: Thinking -> Speaking (Streaming) -> Completed -> Idle
             coroutineScope.launch {
-                listState.animateScrollToItem(messages.size - 1)
-                companionState = CompanionState.THINKING
-                delay(600)
+                try {
+                    try { listState.scrollToItem(messages.size - 1) } catch (_: Throwable) {}
+                    companionState = CompanionState.THINKING
+                    delay(500)
 
-                val assistantMsgId = "a_${messages.size}"
-                var accumulated = ""
-                val initialAssistantMsg = ChatMessage(
-                    id = assistantMsgId,
-                    role = ChatMessage.Role.ASSISTANT,
-                    content = "",
-                    isStreaming = true
-                )
-                messages = messages + initialAssistantMsg
-                companionState = CompanionState.SPEAKING
+                    val assistantMsgId = "a_${messages.size}"
+                    var accumulated = ""
+                    val initialAssistantMsg = ChatMessage(
+                        id = assistantMsgId,
+                        role = ChatMessage.Role.ASSISTANT,
+                        content = "",
+                        isStreaming = true
+                    )
+                    messages = messages + initialAssistantMsg
+                    companionState = CompanionState.SPEAKING
 
-                // Real streaming from Llamatik native engine
-                com.truthlens.llm.LlamatikEngine.generateStreaming(query).collect { token ->
-                    accumulated += token
+                    // Real streaming from Llamatik native engine
+                    com.truthlens.llm.LlamatikEngine.generateStreaming(query).collect { token ->
+                        accumulated += token
+                        messages = messages.map { msg ->
+                            if (msg.id == assistantMsgId) {
+                                msg.copy(content = accumulated)
+                            } else msg
+                        }
+                        try { listState.scrollToItem(messages.size - 1) } catch (_: Throwable) {}
+                    }
+
+                    val followUps = generateFollowUps(query)
+                    val finalContent = accumulated.ifBlank { generateCompanionResponse(query) }
                     messages = messages.map { msg ->
                         if (msg.id == assistantMsgId) {
-                            msg.copy(content = accumulated)
+                            msg.copy(
+                                content = finalContent,
+                                followUps = followUps,
+                                isStreaming = false
+                            )
                         } else msg
                     }
-                    listState.animateScrollToItem(messages.size - 1)
+
+                    // Voice output via native TTS engine
+                    com.truthlens.voice.TendrilsTts.speak(finalContent)
+
+                    delay(300)
+                    companionState = CompanionState.COMPLETED
+                    delay(1000)
+                    companionState = CompanionState.IDLE
+                } catch (e: Throwable) {
+                    println("HomeScreen message processing error: ${e.message}")
+                    companionState = CompanionState.IDLE
                 }
-
-                val followUps = generateFollowUps(query)
-                val finalContent = accumulated.ifBlank { generateCompanionResponse(query) }
-                messages = messages.map { msg ->
-                    if (msg.id == assistantMsgId) {
-                        msg.copy(
-                            content = finalContent,
-                            followUps = followUps,
-                            isStreaming = false
-                        )
-                    } else msg
-                }
-
-                // Voice output via native TTS engine
-                com.truthlens.voice.TendrilsTts.speak(finalContent)
-
-                delay(300)
-                companionState = CompanionState.COMPLETED
-                delay(1000)
-                companionState = CompanionState.IDLE
             }
         }
     }
@@ -311,6 +316,18 @@ fun HomeScreen() {
                     )
                 }
 
+                // Vision Camera / Lens Button
+                IconButton(
+                    onClick = { activeFlowModal = "flow_vision" },
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Vision Lens",
+                        tint = TendrilsPalette.Sprout500
+                    )
+                }
+
                 // Text Input
                 TextField(
                     value = inputText,
@@ -406,6 +423,10 @@ fun HomeScreen() {
                         color = TendrilsTheme.colors.textSecondary
                     )
                     Spacer(modifier = Modifier.height(4.dp))
+                    AttachmentOption("Vision Camera / Lens", "Real-time AI scene understanding & authenticity (<450ms)", Icons.Default.Search) {
+                        showAttachmentSheet = false
+                        activeFlowModal = "flow_vision"
+                    }
                     AttachmentOption("Image or Photograph", "Flow D • Deepfake scan & C2PA check", Icons.Default.Search) {
                         showAttachmentSheet = false
                         activeFlowModal = "flow_d"
@@ -447,6 +468,10 @@ fun HomeScreen() {
 
     // Interactive Flow Modals
     when (activeFlowModal) {
+        "flow_vision" -> FlowVisionDialog(
+            onDismiss = { activeFlowModal = null },
+            onSendToChat = { onSendMessage(it) }
+        )
         "flow_c" -> FlowCLearningDialog(
             onDismiss = { activeFlowModal = null },
             onSendToChat = { onSendMessage(it) }
