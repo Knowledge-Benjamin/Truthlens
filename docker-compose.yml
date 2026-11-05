@@ -2,13 +2,14 @@
 # Track 6: AI for Digital Trust & Protection Against Manipulated Content
 #
 # Usage:
-#   docker compose up --build      (start both services)
-#   docker compose up -d --build   (detached mode)
+#   docker compose up -d --build   (build + start detached)
+#   docker compose up --build      (start with logs)
 #   docker compose down            (stop)
+#   docker compose logs -f backend (stream backend logs)
 #
-# Frontend: http://localhost:3000
-# Backend:  http://localhost:8080
-# API docs: http://localhost:8080/docs
+# Frontend : http://localhost:3000
+# Backend  : http://localhost:8081
+# API docs : http://localhost:8081/docs
 
 services:
   backend:
@@ -19,19 +20,23 @@ services:
     ports:
       - "8081:8080"
     environment:
-      - HF_TOKEN=${HF_TOKEN}
-      - KAGGLE_API_TOKEN=${KAGGLE_API_TOKEN}
+      - HF_TOKEN=${HF_TOKEN:-}
+      - KAGGLE_API_TOKEN=${KAGGLE_API_TOKEN:-}
+      - SUNBIRD_API_TOKEN=${SUNBIRD_API_TOKEN:-}
+      - SUNBIRD_BASE_URL=${SUNBIRD_BASE_URL:-https://api.sunbird.ai}
       - HOST=0.0.0.0
       - PORT=8080
     volumes:
+      # Persist downloaded HF models (~750 MB total) across container restarts
       - hf_cache:/root/.cache/huggingface
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/api/health')"]
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8080/api/health')"]
       interval: 30s
       timeout: 10s
-      start_period: 180s
-      retries: 3
+      start_period: 300s   # models take time to download on first run
+      retries: 5
 
   frontend:
     build:
