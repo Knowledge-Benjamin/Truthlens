@@ -297,9 +297,17 @@ fun ProfileScreen() {
 
                     Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
                     SettingsRow(
+                        title = "My Friends & Family Circle",
+                        subtitle = "Private code-linked companions • No public directory",
+                        icon = Icons.Default.Person,
+                        onClick = { activeDialog = "friends_family" }
+                    )
+
+                    Divider(color = TendrilsTheme.colors.border, thickness = 1.dp)
+                    SettingsRow(
                         title = if (selectedExperience == ExperienceMode.CHILD) "Parental & Family Guidance" else "Family & Safety Experience",
                         subtitle = "Transparent boundaries and safety guidelines without tracking",
-                        icon = Icons.Default.Person,
+                        icon = Icons.Default.Check,
                         onClick = { activeDialog = "family" }
                     )
                 }
@@ -442,6 +450,9 @@ fun ProfileScreen() {
                 activeDialog = null
                 showClearDataConfirmation = true
             }
+        )
+        "friends_family" -> FriendsAndFamilyDialog(
+            onDismiss = { activeDialog = null }
         )
         "permissions" -> PermissionsSettingsDialog(
             onDismiss = { activeDialog = null }
