@@ -6,6 +6,7 @@ import {
   Lightbulb, GraduationCap, Sparkles, ChevronRight,
 } from 'lucide-react'
 import { LessonModule, TipCard } from '../types'
+import { useLanguage } from '../i18n/LanguageContext'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -208,6 +209,7 @@ const lessonContent: Record<string, { heading: string; body: string[]; tip?: str
 
 export default function LearnPage() {
   const [selectedModule, setSelectedModule] = useState<string | null>(null)
+  const { t } = useLanguage()
 
   const handleModuleClick = (id: string) => {
     setSelectedModule(selectedModule === id ? null : id)
@@ -220,15 +222,15 @@ export default function LearnPage() {
       exit={{ opacity: 0, y: -20, transition: { duration: 0.3 } }}
       className="min-h-screen pt-20 hero-bg"
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Header */}
-        <div className="text-center mb-14">
+        <div className="text-center mb-10 sm:mb-14">
           <div className="inline-flex items-center gap-2 glass px-4 py-2 rounded-full text-sm text-accent-300 mb-4 border-accent-500/30">
             <GraduationCap size={14} />
-            Learning Hub
+            {t.learn_badge}
           </div>
-          <h1 className="font-display font-black text-4xl md:text-5xl text-white mb-4">
-            Learn to spot the <span className="gradient-text">fake</span>
+          <h1 className="font-display font-black text-3xl sm:text-4xl md:text-5xl text-white mb-4">
+            {t.learn_title1} <span className="gradient-text">{t.learn_title2}</span>
           </h1>
           <p className="text-slate-400 text-lg max-w-2xl mx-auto">
             Interactive lessons that teach you how deepfakes work and how to protect yourself online.
@@ -237,12 +239,12 @@ export default function LearnPage() {
         </div>
 
         {/* Quick tips strip */}
-        <div className="mb-14">
-          <h2 className="flex items-center gap-2 text-white font-semibold mb-5">
+        <div className="mb-10 sm:mb-14">
+          <h2 className="flex items-center gap-2 text-white font-semibold mb-4 sm:mb-5">
             <Lightbulb size={18} className="text-warn-400" />
-            Quick Spotting Tips
+            {t.learn_tips_title}
           </h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {tips.map((tip, i) => (
               <motion.div
                 key={tip.id}
@@ -274,9 +276,9 @@ export default function LearnPage() {
         <div>
           <h2 className="flex items-center gap-2 text-white font-semibold mb-5">
             <BookOpen size={18} className="text-brand-400" />
-            Lesson Modules
+            {t.learn_modules_title}
           </h2>
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
             {modules.map((mod, i) => (
               <motion.div
                 key={mod.id}

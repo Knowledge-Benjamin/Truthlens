@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import HOST, PORT
 from app.routers import detect as detect_router
+from app.routers import translate as translate_router
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -32,6 +33,8 @@ async def lifespan(app: FastAPI):
     # Preload the detection model
     try:
         from app.services.detector import _load_model
+        import os
+        os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")  # load from cache, skip Hub check
         _load_model()
         logger.info("Model preloaded: %s", get_model_name_safe())
     except Exception as exc:
@@ -75,6 +78,7 @@ app.add_middleware(
 
 # Mount routers
 app.include_router(detect_router.router, prefix="/api", tags=["detection"])
+app.include_router(translate_router.router, prefix="/api", tags=["translation"])
 
 
 @app.get("/")

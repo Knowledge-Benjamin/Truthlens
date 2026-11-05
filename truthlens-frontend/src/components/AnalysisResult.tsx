@@ -6,6 +6,7 @@ import {
 import { useState } from 'react'
 import { DetectionResult } from '../types'
 import { cn, formatDuration } from '../utils/helpers'
+import { useLanguage } from '../i18n/LanguageContext'
 
 interface Props {
   result: DetectionResult
@@ -14,6 +15,7 @@ interface Props {
 
 export default function AnalysisResult({ result, onReset }: Props) {
   const [expandDetails, setExpandDetails] = useState(false)
+  const { t } = useLanguage()
 
   const isFake = result.prediction === 'FAKE'
   const isReal = result.prediction === 'REAL'
@@ -25,8 +27,8 @@ export default function AnalysisResult({ result, onReset }: Props) {
       bg: 'bg-danger-500/10',
       border: 'border-danger-500/30',
       glow: 'glow-red',
-      label: 'Likely Fake / Manipulated',
-      sub: 'This content shows strong signs of AI manipulation or deepfake generation.',
+      label: t.result_fake,
+      sub: t.result_fake_sub,
       badgeClass: 'badge-danger',
     },
     REAL: {
@@ -35,8 +37,8 @@ export default function AnalysisResult({ result, onReset }: Props) {
       bg: 'bg-accent-500/10',
       border: 'border-accent-500/30',
       glow: 'glow-green',
-      label: 'Likely Authentic',
-      sub: 'No significant signs of manipulation were detected.',
+      label: t.result_real,
+      sub: t.result_real_sub,
       badgeClass: 'badge-safe',
     },
     UNCERTAIN: {
@@ -45,8 +47,8 @@ export default function AnalysisResult({ result, onReset }: Props) {
       bg: 'bg-warn-500/10',
       border: 'border-warn-500/30',
       glow: '',
-      label: 'Uncertain',
-      sub: 'The model could not make a confident determination. Use caution.',
+      label: t.result_uncertain,
+      sub: t.result_uncertain_sub,
       badgeClass: 'badge-warn',
     },
   }
@@ -66,17 +68,17 @@ export default function AnalysisResult({ result, onReset }: Props) {
       className="space-y-5"
     >
       {/* Verdict Card */}
-      <div className={cn('rounded-2xl p-6 border', cfg.bg, cfg.border, cfg.glow)}>
-        <div className="flex items-start gap-4">
-          <div className={cn('w-14 h-14 rounded-2xl flex items-center justify-center shrink-0', cfg.bg, 'border', cfg.border)}>
-            <VerdictIcon size={28} className={cfg.color} />
+      <div className={cn('rounded-2xl p-4 sm:p-6 border', cfg.bg, cfg.border, cfg.glow)}>
+        <div className="flex items-start gap-3 sm:gap-4">
+          <div className={cn('w-11 h-11 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shrink-0', cfg.bg, 'border', cfg.border)}>
+            <VerdictIcon size={24} className={cfg.color} />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h3 className={cn('font-display font-bold text-2xl', cfg.color)}>{cfg.label}</h3>
-              <span className={cfg.badgeClass}>{confidencePercent}% confident</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className={cn('font-display font-bold text-lg sm:text-2xl', cfg.color)}>{cfg.label}</h3>
+              <span className={cfg.badgeClass}>{confidencePercent}% {t.result_confident}</span>
             </div>
-            <p className="text-slate-400 text-sm mt-1">{cfg.sub}</p>
+            <p className="text-slate-400 text-xs sm:text-sm mt-1">{cfg.sub}</p>
             <p className="text-slate-600 text-xs mt-2 truncate">📁 {result.filename}</p>
           </div>
         </div>
@@ -85,7 +87,7 @@ export default function AnalysisResult({ result, onReset }: Props) {
         <div className="mt-5 space-y-3">
           <div>
             <div className="flex justify-between text-xs text-slate-400 mb-1.5">
-              <span className="flex items-center gap-1"><AlertTriangle size={11} className="text-danger-400" /> Fake probability</span>
+              <span className="flex items-center gap-1"><AlertTriangle size={11} className="text-danger-400" /> {t.result_fake_prob}</span>
               <span className="font-mono text-danger-400">{fakePercent}%</span>
             </div>
             <div className="progress-bar">
@@ -99,7 +101,7 @@ export default function AnalysisResult({ result, onReset }: Props) {
           </div>
           <div>
             <div className="flex justify-between text-xs text-slate-400 mb-1.5">
-              <span className="flex items-center gap-1"><CheckCircle size={11} className="text-accent-400" /> Real probability</span>
+              <span className="flex items-center gap-1"><CheckCircle size={11} className="text-accent-400" /> {t.result_real_prob}</span>
               <span className="font-mono text-accent-400">{realPercent}%</span>
             </div>
             <div className="progress-bar">
@@ -117,8 +119,8 @@ export default function AnalysisResult({ result, onReset }: Props) {
       {/* Meta */}
       <div className="grid grid-cols-2 gap-3">
         {[
-          { icon: Clock, label: 'Processing time', value: formatDuration(result.processingTime) },
-          { icon: Cpu, label: 'Model used', value: result.modelUsed },
+          { icon: Clock, label: t.result_time, value: formatDuration(result.processingTime) },
+          { icon: Cpu, label: t.result_model, value: result.modelUsed },
         ].map(({ icon: Icon, label, value }) => (
           <div key={label} className="glass rounded-xl p-4 flex items-center gap-3">
             <Icon size={16} className="text-slate-500 shrink-0" />
@@ -138,7 +140,7 @@ export default function AnalysisResult({ result, onReset }: Props) {
         >
           <div className="flex items-center gap-2 text-white font-medium">
             <BarChart2 size={16} className="text-brand-400" />
-            Detailed Analysis Breakdown
+            {t.result_breakdown}
           </div>
           {expandDetails ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
         </button>
@@ -189,42 +191,26 @@ export default function AnalysisResult({ result, onReset }: Props) {
 
       {/* Safety message */}
       {isFake && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="rounded-xl p-4 bg-warn-500/10 border border-warn-500/20 flex items-start gap-3"
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
+          className="rounded-xl p-4 bg-warn-500/10 border border-warn-500/20 flex items-start gap-3">
           <AlertTriangle size={16} className="text-warn-400 mt-0.5 shrink-0" />
           <div className="text-sm">
-            <p className="text-warn-300 font-medium mb-0.5">What should you do?</p>
-            <p className="text-slate-400">
-              Don't share this content. Report it on the platform where you found it. If it involves someone you know, tell a trusted adult.
-            </p>
+            <p className="text-warn-300 font-medium mb-0.5">{t.result_warn_title}</p>
+            <p className="text-slate-400">{t.result_warn_body}</p>
           </div>
         </motion.div>
       )}
       {isReal && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="rounded-xl p-4 bg-accent-500/10 border border-accent-500/20 flex items-start gap-3"
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
+          className="rounded-xl p-4 bg-accent-500/10 border border-accent-500/20 flex items-start gap-3">
           <CheckCircle size={16} className="text-accent-400 mt-0.5 shrink-0" />
           <div className="text-sm">
-            <p className="text-accent-300 font-medium mb-0.5">Good news!</p>
-            <p className="text-slate-400">
-              This media appears to be authentic. However, always verify information from multiple sources — no AI is 100% perfect.
-            </p>
+            <p className="text-accent-300 font-medium mb-0.5">{t.result_good_title}</p>
+            <p className="text-slate-400">{t.result_good_body}</p>
           </div>
         </motion.div>
       )}
-
-      {/* Reset */}
-      <button onClick={onReset} className="btn-secondary w-full">
-        ← Analyse Another File
-      </button>
+      <button onClick={onReset} className="btn-secondary w-full">{t.result_reset}</button>
     </motion.div>
   )
 }

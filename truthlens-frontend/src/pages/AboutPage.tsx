@@ -60,14 +60,14 @@ export default function AboutPage() {
       exit={{ opacity: 0, y: -20, transition: { duration: 0.3 } }}
       className="min-h-screen pt-20 hero-bg"
     >
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-10 sm:mb-16">
           <div className="inline-flex items-center gap-2 glass px-4 py-2 rounded-full text-sm text-brand-300 mb-4 border-brand-500/30">
             <Shield size={14} />
             How Deepfake A.I Detector Works
           </div>
-          <h1 className="font-display font-black text-4xl md:text-5xl text-white mb-4">
+          <h1 className="font-display font-black text-3xl sm:text-4xl md:text-5xl text-white mb-4">
             Built for a <span className="gradient-text">safer digital world</span>
           </h1>
           <p className="text-slate-400 text-lg max-w-2xl mx-auto">
@@ -92,7 +92,7 @@ export default function AboutPage() {
             manipulation, impersonation, and misinformation. Existing tools detect fakes but
             don't teach people how to think critically about what they see.
           </p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {problemStats.map(({ value, label, color }, i) => (
               <motion.div
                 key={i}
@@ -103,7 +103,7 @@ export default function AboutPage() {
                 viewport={{ once: true }}
                 className="card-hover text-center"
               >
-                <div className={`font-display font-black text-3xl ${color} mb-2`}>{value}</div>
+                <div className={`font-display font-black text-2xl sm:text-3xl ${color} mb-2`}>{value}</div>
                 <div className="text-slate-500 text-xs leading-relaxed">{label}</div>
               </motion.div>
             ))}

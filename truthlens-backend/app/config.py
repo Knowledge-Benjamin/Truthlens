@@ -12,7 +12,7 @@ KAGGLE_API_TOKEN = os.getenv("KAGGLE_API_TOKEN", "")
 
 # Server
 HOST = os.getenv("HOST", "0.0.0.0")
-PORT = int(os.getenv("PORT", "8080"))
+PORT = int(os.getenv("PORT", "8088"))
 
 # Model — a community deepfake detection model on Hugging Face
 DEEPFAKE_MODEL_NAME = os.getenv(
@@ -20,6 +20,10 @@ DEEPFAKE_MODEL_NAME = os.getenv(
     "prithivMLmods/Deepfake-Detect-Siglip2",
 )
 FALLBACK_MODEL_NAME = "HrutikAdsare/deepfake-detector-faceforensics"
+
+# Sunbird AI translation
+SUNBIRD_API_TOKEN = os.getenv("SUNBIRD_API_TOKEN", "")
+SUNBIRD_BASE_URL = os.getenv("SUNBIRD_BASE_URL", "https://api.sunbird.ai")
 
 # Upload limits
 MAX_UPLOAD_MB = 50

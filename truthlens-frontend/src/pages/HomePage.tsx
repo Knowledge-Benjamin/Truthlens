@@ -4,6 +4,7 @@ import {
   Shield, Eye, BookOpen, Brain, ArrowRight, Zap,
   Users, CheckCircle, AlertTriangle, TrendingUp,
 } from 'lucide-react'
+import { useLanguage } from '../i18n/LanguageContext'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -13,83 +14,35 @@ const fadeUp = {
   }),
 }
 
-const features = [
-  {
-    icon: Shield,
-    color: 'from-brand-500 to-purple-600',
-    glow: 'brand',
-    title: 'Deepfake Detector',
-    description: 'Upload any image or video. Our AI analyses it for signs of manipulation with detailed confidence scores.',
-    link: '/detect',
-    cta: 'Try Now',
-  },
-  {
-    icon: BookOpen,
-    color: 'from-accent-500 to-teal-600',
-    glow: 'green',
-    title: 'Learning Hub',
-    description: 'Interactive lessons on spotting manipulated media, understanding AI-generated content, and staying safe.',
-    link: '/learn',
-    cta: 'Start Learning',
-  },
-  {
-    icon: Brain,
-    color: 'from-pink-500 to-rose-600',
-    glow: 'red',
-    title: 'Digital Literacy Quiz',
-    description: 'Test your knowledge with real-world scenarios. Build skills to identify fake content in everyday life.',
-    link: '/quiz',
-    cta: 'Take Quiz',
-  },
-]
-
-const stats = [
-  { value: '96%', label: 'Detection Accuracy', icon: TrendingUp },
-  { value: '2.1B+', label: 'Deepfakes Online', icon: AlertTriangle },
-  { value: '3 Models', label: 'AI Models Used', icon: Zap },
-  { value: '< 5s', label: 'Analysis Time', icon: Users },
-]
-
-const steps = [
-  {
-    number: '01',
-    title: 'Upload Media',
-    description: 'Drag and drop or select any image or video file from your device.',
-    color: 'text-brand-400',
-  },
-  {
-    number: '02',
-    title: 'AI Analysis',
-    description: 'Our deepfake detection models scan for inconsistencies, artifacts, and manipulation traces.',
-    color: 'text-purple-400',
-  },
-  {
-    number: '03',
-    title: 'Get Results',
-    description: 'Receive a clear verdict with confidence score and a detailed explanation of findings.',
-    color: 'text-pink-400',
-  },
-  {
-    number: '04',
-    title: 'Learn & Share',
-    description: 'Understand what to look for and share results with others to promote digital safety.',
-    color: 'text-accent-400',
-  },
-]
-
-const warningTips = [
-  'Check if the face matches the rest of the video',
-  'Look for unnatural blinking or eye movement',
-  'Watch for blurry or inconsistent edges around faces',
-  'Verify the source — is it from a trusted account?',
-  'Use Deepfake A.I Detector to scan suspicious media',
-]
-
 export default function HomePage() {
+  const { t } = useLanguage()
+
+  const features = [
+    { icon: Shield, color: 'from-brand-500 to-purple-600', title: t.feat_detector_title, description: t.feat_detector_desc, link: '/detect', cta: t.feat_detector_cta },
+    { icon: BookOpen, color: 'from-accent-500 to-teal-600', title: t.feat_learn_title, description: t.feat_learn_desc, link: '/learn', cta: t.feat_learn_cta },
+    { icon: Brain, color: 'from-pink-500 to-rose-600', title: t.feat_quiz_title, description: t.feat_quiz_desc, link: '/quiz', cta: t.feat_quiz_cta },
+  ]
+
+  const stats = [
+    { value: '96%', label: t.stat_accuracy, icon: TrendingUp },
+    { value: '2.1B+', label: t.stat_deepfakes, icon: AlertTriangle },
+    { value: '3', label: t.stat_models, icon: Zap },
+    { value: '< 5s', label: t.stat_time, icon: Users },
+  ]
+
+  const steps = [
+    { number: '01', title: t.step1_title, description: t.step1_desc, color: 'text-brand-400' },
+    { number: '02', title: t.step2_title, description: t.step2_desc, color: 'text-purple-400' },
+    { number: '03', title: t.step3_title, description: t.step3_desc, color: 'text-pink-400' },
+    { number: '04', title: t.step4_title, description: t.step4_desc, color: 'text-accent-400' },
+  ]
+
+  const warningTips = [t.tip_1, t.tip_2, t.tip_3, t.tip_4, t.tip_5]
+
   return (
     <div className="hero-bg">
       {/* Hero */}
-      <section className="relative pt-32 pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section className="relative pt-28 pb-16 sm:pt-32 sm:pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
         {/* Background blobs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 left-1/4 w-96 h-96 bg-brand-600/10 rounded-full blur-3xl" />
@@ -106,7 +59,7 @@ export default function HomePage() {
             className="inline-flex items-center gap-2 glass px-4 py-2 rounded-full text-sm text-brand-300 mb-8 border-brand-500/30"
           >
             <div className="w-1.5 h-1.5 rounded-full bg-accent-400 animate-pulse" />
-            Track 6 — AI for Digital Trust &amp; Protection
+            {t.home_badge}
             <div className="badge-safe text-xs py-0.5">UCC Hackathon 2026</div>
           </motion.div>
 
@@ -116,11 +69,11 @@ export default function HomePage() {
             variants={fadeUp}
             initial="hidden"
             animate="show"
-            className="font-display font-black text-5xl sm:text-6xl lg:text-7xl text-white leading-[1.05] tracking-tight"
+            className="font-display font-black text-4xl sm:text-5xl lg:text-7xl text-white leading-[1.05] tracking-tight"
           >
-            See Through{' '}
+            {t.home_hero_title1}{' '}
             <span className="relative inline-block">
-              <span className="gradient-text">the Fake.</span>
+              <span className="gradient-text">{t.home_hero_title2}</span>
               <svg className="absolute -bottom-2 left-0 w-full" height="6" viewBox="0 0 200 6" preserveAspectRatio="none">
                 <path d="M0 3 Q50 0 100 3 Q150 6 200 3" stroke="url(#grad)" strokeWidth="2" fill="none" />
                 <defs>
@@ -138,10 +91,9 @@ export default function HomePage() {
             variants={fadeUp}
             initial="hidden"
             animate="show"
-            className="mt-8 text-xl text-slate-400 leading-relaxed max-w-2xl mx-auto"
+            className="mt-6 text-base sm:text-xl text-slate-400 leading-relaxed max-w-2xl mx-auto px-2"
           >
-            Deepfake A.I Detector helps young people detect deepfakes, spot manipulated media, and build the digital literacy skills
-            to stay safe in an AI-powered world.
+            {t.home_hero_desc}
           </motion.p>
 
           {/* CTAs */}
@@ -150,16 +102,16 @@ export default function HomePage() {
             variants={fadeUp}
             initial="hidden"
             animate="show"
-            className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
+            className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 w-full px-2"
           >
-            <Link to="/detect" className="btn-primary text-base px-8 py-4 flex items-center gap-2 group">
+            <Link to="/detect" className="btn-primary text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-4 flex items-center gap-2 group w-full sm:w-auto justify-center">
               <Eye size={18} />
-              Scan a File Now
+              {t.home_cta_scan}
               <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </Link>
-            <Link to="/learn" className="btn-secondary text-base px-8 py-4 flex items-center gap-2">
+            <Link to="/learn" className="btn-secondary text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-4 flex items-center gap-2 w-full sm:w-auto justify-center">
               <BookOpen size={18} />
-              Learn Digital Safety
+              {t.home_cta_learn}
             </Link>
           </motion.div>
 
@@ -169,12 +121,12 @@ export default function HomePage() {
             variants={fadeUp}
             initial="hidden"
             animate="show"
-            className="mt-8 flex items-center justify-center gap-6 text-slate-600 text-sm"
+            className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-slate-600 text-xs sm:text-sm"
           >
-            {['No account needed', 'Free to use', 'Privacy-first'].map((t) => (
-              <span key={t} className="flex items-center gap-1.5">
+            {[t.home_trust_1, t.home_trust_2, t.home_trust_3].map((txt) => (
+              <span key={txt} className="flex items-center gap-1.5">
                 <CheckCircle size={13} className="text-accent-500" />
-                {t}
+                {txt}
               </span>
             ))}
           </motion.div>
@@ -185,7 +137,7 @@ export default function HomePage() {
           initial={{ opacity: 0, y: 60, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ delay: 0.5, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="max-w-2xl mx-auto mt-16 px-4"
+          className="max-w-2xl mx-auto mt-12 px-0 sm:px-4"
         >
           <div className="glass rounded-3xl p-6 border-brand-500/20 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-brand-600/5 to-purple-600/5" />
@@ -228,8 +180,8 @@ export default function HomePage() {
       </section>
 
       {/* Stats */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 border-t border-white/5">
-        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
+      <section className="py-10 sm:py-16 px-4 sm:px-6 lg:px-8 border-t border-white/5">
+        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
           {stats.map(({ value, label, icon: Icon }, i) => (
             <motion.div
               key={label}
@@ -243,7 +195,7 @@ export default function HomePage() {
               <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-brand-600/15 mb-3">
                 <Icon size={18} className="text-brand-400" />
               </div>
-              <div className="font-display font-black text-3xl text-white">{value}</div>
+              <div className="font-display font-black text-2xl sm:text-3xl text-white">{value}</div>
               <div className="text-slate-500 text-sm mt-1">{label}</div>
             </motion.div>
           ))}
@@ -251,7 +203,7 @@ export default function HomePage() {
       </section>
 
       {/* Features */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8">
+      <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <motion.div
             variants={fadeUp}
@@ -261,10 +213,8 @@ export default function HomePage() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="section-title">Everything you need to stay safe</h2>
-            <p className="section-subtitle mx-auto">
-              Three powerful tools that work together to protect you from manipulated content online.
-            </p>
+            <h2 className="section-title">{t.home_features_title}</h2>
+            <p className="section-subtitle mx-auto">{t.home_features_sub}</p>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-6">
@@ -297,7 +247,7 @@ export default function HomePage() {
       </section>
 
       {/* How It Works */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-900/30">
+      <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-slate-900/30">
         <div className="max-w-6xl mx-auto">
           <motion.div
             variants={fadeUp}
@@ -307,10 +257,8 @@ export default function HomePage() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="section-title">How Deepfake A.I Detector works</h2>
-            <p className="section-subtitle mx-auto">
-              Four simple steps from suspicious content to confident understanding.
-            </p>
+            <h2 className="section-title">{t.home_how_title}</h2>
+            <p className="section-subtitle mx-auto">{t.home_how_sub}</p>
           </motion.div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -341,7 +289,7 @@ export default function HomePage() {
       </section>
 
       {/* Warning Tips */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8">
+      <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <motion.div
             variants={fadeUp}
@@ -357,11 +305,11 @@ export default function HomePage() {
                 <div className="w-10 h-10 rounded-xl bg-warn-500/20 flex items-center justify-center">
                   <AlertTriangle size={20} className="text-warn-400" />
                 </div>
-                <h2 className="font-display font-bold text-2xl text-white">Quick Spotting Guide</h2>
+                <h2 className="font-display font-bold text-2xl text-white">
+                  {t.home_tips_title}
+                </h2>
               </div>
-              <p className="text-slate-400 mb-6">
-                Before using the detector, train your eye with these key warning signs:
-              </p>
+              <p className="text-slate-400 mb-6">{t.home_tips_sub}</p>
               <ul className="space-y-3">
                 {warningTips.map((tip, i) => (
                   <motion.li
@@ -380,7 +328,7 @@ export default function HomePage() {
               </ul>
               <Link to="/learn" className="btn-primary inline-flex items-center gap-2 mt-8">
                 <BookOpen size={16} />
-                Learn More Techniques
+                {t.tips_learn_btn}
               </Link>
             </div>
           </motion.div>
@@ -388,7 +336,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Banner */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8">
+      <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             variants={fadeUp}
@@ -397,16 +345,16 @@ export default function HomePage() {
             whileInView="show"
             viewport={{ once: true }}
           >
-            <h2 className="font-display font-black text-4xl md:text-5xl text-white mb-6">
-              Ready to spot the{' '}
-              <span className="gradient-text">fake?</span>
+            <h2 className="font-display font-black text-3xl sm:text-4xl md:text-5xl text-white mb-4 sm:mb-6">
+              {t.home_cta_title1}{' '}
+              <span className="gradient-text">{t.home_cta_title2}</span>
             </h2>
-            <p className="text-slate-400 text-lg mb-10 max-w-xl mx-auto">
-              Upload a suspicious image or video and let our AI tell you if it's real within seconds.
+            <p className="text-slate-400 text-base sm:text-lg mb-8 sm:mb-10 max-w-xl mx-auto">
+              {t.home_cta_sub}
             </p>
-            <Link to="/detect" className="btn-primary text-lg px-10 py-4 inline-flex items-center gap-2 group">
+            <Link to="/detect" className="btn-primary text-base sm:text-lg px-8 sm:px-10 py-3 sm:py-4 inline-flex items-center gap-2 group">
               <Shield size={20} />
-              Start Detecting
+              {t.home_cta_btn}
               <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </Link>
           </motion.div>

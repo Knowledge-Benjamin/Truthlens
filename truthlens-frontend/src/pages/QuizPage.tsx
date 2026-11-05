@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { QuizQuestion } from '../types'
 import { cn } from '../utils/helpers'
+import { useLanguage } from '../i18n/LanguageContext'
 
 const questions: QuizQuestion[] = [
   {
@@ -109,6 +110,7 @@ export default function QuizPage() {
   const [score, setScore] = useState(0)
   const [answers, setAnswers] = useState<boolean[]>([])
   const [finished, setFinished] = useState(false)
+  const { t } = useLanguage()
 
   const question = questions[currentQ]
   const total = questions.length
@@ -162,9 +164,9 @@ export default function QuizPage() {
         className="min-h-screen pt-20 hero-bg flex items-center"
       >
         <div className="max-w-2xl mx-auto px-4 py-12 text-center w-full">
-          <div className="inline-flex items-center gap-2 glass px-4 py-2 rounded-full text-sm text-pink-300 mb-6 border-pink-500/30">
+            <div className="inline-flex items-center gap-2 glass px-4 py-2 rounded-full text-sm text-pink-300 mb-6 border-pink-500/30">
             <Brain size={14} />
-            Digital Literacy Quiz
+            {t.quiz_badge}
           </div>
 
           <motion.div
@@ -176,11 +178,11 @@ export default function QuizPage() {
             <Brain size={36} className="text-white" />
           </motion.div>
 
-          <h1 className="font-display font-black text-4xl md:text-5xl text-white mb-4">
-            Test Your <span className="gradient-text">Fake-Spotting</span> Skills
+          <h1 className="font-display font-black text-3xl sm:text-4xl md:text-5xl text-white mb-4">
+            {t.quiz_title1} <span className="gradient-text">{t.quiz_title2}</span>
           </h1>
           <p className="text-slate-400 text-lg mb-8 max-w-lg mx-auto">
-            {total} questions covering deepfakes, impersonation, AI-generated content, and online safety. See how much you know!
+            {total} {t.quiz_sub}
           </p>
 
           <div className="flex items-center justify-center gap-6 mb-10 text-sm text-slate-500">
@@ -191,8 +193,8 @@ export default function QuizPage() {
             <span className="flex items-center gap-1.5"><Award size={14} className="text-accent-400" /> Score Tracking</span>
           </div>
 
-          <button onClick={handleStart} className="btn-primary text-lg px-10 py-4 inline-flex items-center gap-2 group">
-            Start Quiz
+          <button onClick={handleStart} className="btn-primary text-base sm:text-lg px-8 sm:px-10 py-3 sm:py-4 inline-flex items-center gap-2 group w-full sm:w-auto justify-center">
+            {t.quiz_start}
             <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
@@ -244,9 +246,9 @@ export default function QuizPage() {
               </div>
             </div>
 
-            <h1 className="font-display font-bold text-3xl text-white mb-2">{title}</h1>
+            <h1 className="font-display font-bold text-2xl sm:text-3xl text-white mb-2">{title}</h1>
             <p className="text-slate-400 mb-2">
-              You scored <span className="text-white font-bold">{score}</span> out of <span className="text-white font-bold">{total}</span>
+              {t.quiz_results_scored} <span className="text-white font-bold">{score}</span> {t.quiz_results_of} <span className="text-white font-bold">{total}</span>
             </p>
             <p className="text-slate-500 text-sm max-w-md mx-auto mb-8">{msg}</p>
 
@@ -274,10 +276,10 @@ export default function QuizPage() {
             {/* Actions */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <button onClick={handleStart} className="btn-primary flex items-center gap-2">
-                <RotateCcw size={16} /> Try Again
+                <RotateCcw size={16} /> {t.quiz_retry}
               </button>
               <Link to="/learn" className="btn-secondary flex items-center gap-2">
-                Review Lessons
+                {t.quiz_review}
               </Link>
             </div>
           </motion.div>
@@ -300,8 +302,8 @@ export default function QuizPage() {
         {/* Progress */}
         <div className="mb-8">
           <div className="flex items-center justify-between text-sm text-slate-400 mb-2">
-            <span>Question {currentQ + 1} of {total}</span>
-            <span className="flex items-center gap-1.5"><Star size={13} className="text-warn-400" /> Score: {score}</span>
+            <span>{t.quiz_question_of} {currentQ + 1} of {total}</span>
+            <span className="flex items-center gap-1.5"><Star size={13} className="text-warn-400" /> {t.quiz_score}: {score}</span>
           </div>
           <div className="progress-bar">
             <motion.div
@@ -334,7 +336,7 @@ export default function QuizPage() {
             </div>
 
             {/* Question */}
-            <h2 className="font-display font-bold text-2xl text-white mb-8 leading-snug">
+            <h2 className="font-display font-bold text-lg sm:text-2xl text-white mb-6 sm:mb-8 leading-snug">
               {question.question}
             </h2>
 
@@ -352,7 +354,7 @@ export default function QuizPage() {
                     onClick={() => handleSelect(index)}
                     disabled={answered}
                     className={cn(
-                      'w-full text-left p-4 rounded-xl border transition-all duration-200 flex items-center gap-3',
+                      'w-full text-left p-3 sm:p-4 rounded-xl border transition-all duration-200 flex items-center gap-3',
                       !answered && 'border-slate-700 bg-slate-800/40 hover:border-brand-500/50 hover:bg-slate-800/70 cursor-pointer',
                       showCorrect && 'border-accent-500/50 bg-accent-500/10',
                       showWrong && 'border-danger-500/50 bg-danger-500/10',
@@ -395,7 +397,7 @@ export default function QuizPage() {
                 >
                   <p className={cn('font-medium text-sm mb-1 flex items-center gap-1.5',
                     selected === question.correctIndex ? 'text-accent-300' : 'text-warn-300')}>
-                    {selected === question.correctIndex ? <><CheckCircle size={14} /> Correct!</> : <><XCircle size={14} /> Not quite.</>}
+                    {selected === question.correctIndex ? <><CheckCircle size={14} /> {t.quiz_correct}</> : <><XCircle size={14} /> {t.quiz_wrong}</>}
                   </p>
                   <p className="text-slate-400 text-sm leading-relaxed">{question.explanation}</p>
                 </motion.div>
@@ -411,7 +413,7 @@ export default function QuizPage() {
                   onClick={handleNext}
                   className="btn-primary w-full flex items-center justify-center gap-2"
                 >
-                  {currentQ + 1 < total ? 'Next Question' : 'See Results'}
+                  {currentQ + 1 < total ? t.quiz_next : t.quiz_see_results}
                   <ArrowRight size={16} />
                 </motion.button>
               )}

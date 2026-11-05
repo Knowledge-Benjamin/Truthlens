@@ -1,14 +1,15 @@
 import { motion } from 'framer-motion'
 import { Cpu, Eye, ScanLine, Layers } from 'lucide-react'
-
-const steps = [
-  { icon: Eye,      label: 'Scanning visual patterns…' },
-  { icon: Layers,   label: 'Analysing facial features…' },
-  { icon: Cpu,      label: 'Running deepfake models…' },
-  { icon: ScanLine, label: 'Compiling results…' },
-]
+import { useLanguage } from '../i18n/LanguageContext'
 
 export default function AnalyzingLoader({ progress }: { progress: number }) {
+  const { t } = useLanguage()
+  const steps = [
+    { icon: Eye,      label: t.analyze_step1 },
+    { icon: Layers,   label: t.analyze_step2 },
+    { icon: Cpu,      label: t.analyze_step3 },
+    { icon: ScanLine, label: t.analyze_step4 },
+  ]
   const stepIndex = Math.min(Math.floor(progress / 25), steps.length - 1)
   const { icon: StepIcon, label } = steps[stepIndex]
 
@@ -33,7 +34,7 @@ export default function AnalyzingLoader({ progress }: { progress: number }) {
         <div className="absolute inset-0 rounded-full border border-brand-500/20 ping-slow" />
       </div>
 
-      <h3 className="font-display font-bold text-xl text-white mb-2">Analysing content…</h3>
+      <h3 className="font-display font-bold text-xl text-white mb-2">{t.analyzing_title}</h3>
       <p className="text-slate-400 text-sm mb-8">{label}</p>
 
       {/* Progress bar */}

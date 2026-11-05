@@ -6,6 +6,7 @@ import AnalyzingLoader from '../components/AnalyzingLoader'
 import AnalysisResult from '../components/AnalysisResult'
 import { analyzeMedia } from '../utils/api'
 import { DetectionResult, UploadState } from '../types'
+import { useLanguage } from '../i18n/LanguageContext'
 
 const PAGE_TRANSITION = {
   initial: { opacity: 0, y: 20 },
@@ -68,41 +69,42 @@ export default function DetectorPage() {
   useEffect(() => () => stopProgress(), [])
 
   const isAnalyzing = uploadState.status === 'analyzing' || uploadState.status === 'uploading'
+  const { t } = useLanguage()
 
   return (
     <motion.div {...PAGE_TRANSITION} className="min-h-screen pt-20 hero-bg">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
-        <div className="flex items-center justify-between mb-10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-brand-600/20 flex items-center justify-center">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-10 h-10 rounded-xl bg-brand-600/20 flex items-center justify-center shrink-0">
                 <Shield size={20} className="text-brand-400" />
               </div>
-              <h1 className="font-display font-black text-3xl md:text-4xl text-white">
-                Deepfake Detector
+              <h1 className="font-display font-black text-2xl sm:text-3xl md:text-4xl text-white">
+                {t.detect_title}
               </h1>
             </div>
-            <p className="text-slate-400 ml-14 -mt-1">
-              Upload any image or video to check for AI manipulation.
+            <p className="text-slate-400 text-sm sm:ml-14 mt-1">
+              {t.detect_sub}
             </p>
           </div>
 
           {history.length > 0 && (
             <button
               onClick={() => setShowHistory(!showHistory)}
-              className="hidden sm:flex items-center gap-2 btn-secondary text-sm py-2"
+              className="hidden sm:flex items-center gap-2 btn-secondary text-sm py-2 shrink-0"
             >
               <History size={15} />
-              History ({history.length})
+              {t.detect_history} ({history.length})
             </button>
           )}
         </div>
 
-        <div className="grid lg:grid-cols-5 gap-8">
+        <div className="grid lg:grid-cols-5 gap-6 lg:gap-8">
           {/* Main Panel */}
-          <div className="lg:col-span-3 space-y-6">
-            <div className="glass-dark rounded-3xl p-6 md:p-8">
+          <div className="lg:col-span-3 space-y-4 sm:space-y-6">
+            <div className="glass-dark rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8">
               <AnimatePresence mode="wait">
                 {uploadState.status === 'error' ? (
                   <motion.div
@@ -134,10 +136,7 @@ export default function DetectorPage() {
             {/* Disclaimer */}
             <div className="flex items-start gap-3 text-xs text-slate-600 px-1">
               <Info size={13} className="shrink-0 mt-0.5 text-slate-700" />
-              <p>
-                Deepfake A.I Detector uses AI models that are not 100% accurate. Results are for educational guidance only.
-                Always verify important content through multiple trusted sources. Files are not stored after analysis.
-              </p>
+              <p>{t.detect_disclaimer}</p>
             </div>
           </div>
 
@@ -147,7 +146,7 @@ export default function DetectorPage() {
             <div className="glass-dark rounded-2xl p-5">
               <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
                 <Shield size={15} className="text-brand-400" />
-                What we analyse
+                {t.detect_what_title}
               </h3>
               <ul className="space-y-3">
                 {[
@@ -170,9 +169,9 @@ export default function DetectorPage() {
 
             {/* Tips */}
             <div className="glass-dark rounded-2xl p-5">
-              <h3 className="font-semibold text-white mb-4">📚 Tip of the day</h3>
+              <h3 className="font-semibold text-white mb-4">{t.detect_tip_title}</h3>
               <p className="text-slate-400 text-sm leading-relaxed">
-                Always check the <strong className="text-slate-300">source</strong> of content before sharing. Even if an image passes our detector, it may still be misleading when taken out of context.
+                {t.detect_tip_body}
               </p>
             </div>
 
@@ -184,7 +183,7 @@ export default function DetectorPage() {
                   className="flex items-center gap-2 btn-secondary text-sm py-2 w-full justify-center"
                 >
                   <History size={15} />
-                  Recent scans ({history.length})
+                  {t.detect_recent} ({history.length})
                 </button>
               </div>
             )}
